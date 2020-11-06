@@ -1,0 +1,79 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ServiceBus.Namespace.Name": {
+            "defaultValue": "contoso-messaging-landscape",
+            "type": "String"
+        },
+        "TrafficManager.Name": {
+            "defaultValue": "scalo-traffic-manager",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.Network/trafficManagerProfiles",
+            "apiVersion": "2018-04-01",
+            "name": "[parameters('TrafficManager.Name')]",
+            "location": "global",
+            "properties": {
+                "profileStatus": "Enabled",
+                "trafficRoutingMethod": "Performance",
+                "dnsConfig": {
+                    "relativeName": "[parameters('TrafficManager.Name')]",
+                    "ttl": 60
+                },
+                "monitorConfig": {
+                    "profileMonitorStatus": "Inactive",
+                    "protocol": "HTTP",
+                    "port": 80,
+                    "path": "/api/v1/health",
+                    "intervalInSeconds": 30,
+                    "toleratedNumberOfFailures": 3,
+                    "timeoutInSeconds": 10
+                },
+                "endpoints": [],
+                "trafficViewEnrollmentStatus": "Disabled"
+            }
+        },
+        {
+            "type": "Microsoft.ServiceBus/namespaces",
+            "apiVersion": "2018-01-01-preview",
+            "name": "[parameters('ServiceBus.Namespace.Name')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Basic",
+                "tier": "Basic"
+            },
+            "properties": {
+                "zoneRedundant": false
+            }
+        },
+        {
+            "type": "Microsoft.ServiceBus/namespaces/queues",
+            "apiVersion": "2017-04-01",
+            "name": "[concat(parameters('ServiceBus.Namespace.Name'), '/orders')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "lockDuration": "PT30S",
+                "maxSizeInMegabytes": 1024,
+                "requiresDuplicateDetection": false,
+                "requiresSession": false,
+                "defaultMessageTimeToLive": "P14D",
+                "deadLetteringOnMessageExpiration": false,
+                "enableBatchedOperations": true,
+                "duplicateDetectionHistoryTimeWindow": "PT10M",
+                "maxDeliveryCount": 10,
+                "status": "Active",
+                "autoDeleteOnIdle": "P10675199DT2H48M5.4775807S",
+                "enablePartitioning": false,
+                "enableExpress": false
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.ServiceBus/namespaces', parameters('ServiceBus.Namespace.Name'))]"
+            ]
+        }
+    ]
+}
