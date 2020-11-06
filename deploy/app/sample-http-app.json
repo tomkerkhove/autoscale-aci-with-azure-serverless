@@ -10,7 +10,7 @@
     },
     "ContainerInstance.Image": {
       "type": "string",
-      "defaultValue": "ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:0.1.0",
+      "defaultValue": "ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest",
       "metadata": {
         "description": "Image and tag to deploy"
       }
