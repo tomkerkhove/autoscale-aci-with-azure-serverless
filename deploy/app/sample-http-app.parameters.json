@@ -1,0 +1,15 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ContainerInstance.Name": {
+            "value": "scalo-portal-001-test"
+        },
+        "ContainerInstance.Image": {
+            "value": "ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:0.1.0"
+        },
+        "TrafficManager.Name":{
+            "value": "scalo-traffic-manager"
+        }
+    }
+}

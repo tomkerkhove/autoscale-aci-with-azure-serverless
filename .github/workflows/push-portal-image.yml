@@ -1,0 +1,24 @@
+name: Push Sample Portal Image
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+    - 'src/AutoscalingAzureContainerInstances.Website/'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Docker Login
+      uses: docker/login-action@v1.6.0
+      with:
+        registry: ghcr.io
+        username: tomkerkhove
+        password: ${{ secrets.CONTAINER_REGISTRY_KEY }}
+    - name: Build the Docker image
+      run: docker build ./src/ --file ./src/AutoscalingAzureContainerInstances.Website/Dockerfile --tag ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest
+    - name: Push the Docker image
+      run: docker push ./src/ --file ./src/AutoscalingAzureContainerInstances.Website/Dockerfile --tag ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest
