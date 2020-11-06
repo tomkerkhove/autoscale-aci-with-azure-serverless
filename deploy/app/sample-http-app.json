@@ -1,0 +1,106 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "ContainerInstance.Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of Azure Container Instance container group"
+      }
+    },
+    "ContainerInstance.Image": {
+      "type": "string",
+      "defaultValue": "ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:0.1.0",
+      "metadata": {
+        "description": "Image and tag to deploy"
+      }
+    },
+    "ContainerInstance.Cpu": {
+      "type": "string",
+      "defaultValue": "0.5",
+      "metadata": {
+        "description": "Name of Azure Container Instance container group"
+      }
+    },
+    "ContainerInstance.MemoryInGb": {
+      "type": "string",
+      "defaultValue": "0.7",
+      "metadata": {
+        "description": "Name of Azure Container Instance container group"
+      }
+    },
+    "TrafficManager.Name": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of Azure Traffic Manager routing traffic"
+      }
+    }
+  },
+  "variables": {
+  },
+  "resources": [
+    {
+      "name": "[parameters('ContainerInstance.Name')]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2019-12-01",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+      ],
+      "properties": {
+        "containers": [
+          {
+            "name": "portal",
+            "properties": {
+              "image": "[parameters('ContainerInstance.Image')]",
+              "ports": [
+                {
+                  "protocol": "Tcp",
+                  "port": 80
+                }
+              ],
+              "environmentVariables": [
+                {
+                  "name": "InstanceName",
+                  "value": "[parameters('ContainerInstance.Name')]"
+                }
+              ],
+              "volumeMounts": [
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": "[parameters('ContainerInstance.Cpu')]",
+                  "memoryInGb": "[parameters('ContainerInstance.MemoryInGb')]"
+                }
+              }
+            }
+          }
+        ],
+        "volumes": [],
+        "ipAddress": {
+          "ports": [
+            {
+              "protocol": "Tcp",
+              "port": 80
+            }
+          ],
+          "type": "Public"
+        },
+        "osType": "Linux"
+      }
+    },
+    {
+      "apiVersion": "2015-11-01",
+      "type": "Microsoft.Network/trafficManagerProfiles/ExternalEndpoints",
+      "name": "[concat(parameters('TrafficManager.Name'), '/', parameters('ContainerInstance.Name'))]",
+      "dependsOn": [
+        "[resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('ContainerInstance.Name'))]"
+      ],
+      "location": "global",
+      "properties": {
+        "target": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('ContainerInstance.Name'))).ipAddress.ip]"
+      }
+    }
+  ],
+  "outputs": {
+  }
+}
