@@ -6,7 +6,7 @@
             "value": "scalo-portal-001-test"
         },
         "ContainerInstance.Image": {
-            "value": "ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:0.1.0"
+            "value": "ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest"
         },
         "TrafficManager.Name":{
             "value": "scalo-traffic-manager"
