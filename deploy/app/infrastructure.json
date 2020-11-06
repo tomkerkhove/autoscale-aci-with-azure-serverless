@@ -20,7 +20,7 @@
             "location": "global",
             "properties": {
                 "profileStatus": "Enabled",
-                "trafficRoutingMethod": "Performance",
+                "trafficRoutingMethod": "Weighted",
                 "dnsConfig": {
                     "relativeName": "[parameters('TrafficManager.Name')]",
                     "ttl": 60
