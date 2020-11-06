@@ -1,4 +1,4 @@
-# Autoscale Azure Container Instance
+# Autoscale Azure Container Instance with Azure Serverless
 
 A proof-of-concept on how you can autoscale Azure Container Instance container groups in a resource group by using with Azure Serverless as a scaling infrastructure.
 
