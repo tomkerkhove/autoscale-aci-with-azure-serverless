@@ -3,8 +3,6 @@ name: Push Sample Portal Image
 on:
   push:
     branches: [ main ]
-    paths:
-    - 'src/AutoscalingAzureContainerInstances.Website/'
 
 jobs:
   build:
