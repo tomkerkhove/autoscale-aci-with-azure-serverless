@@ -19,4 +19,4 @@ jobs:
     - name: Build the Docker image
       run: docker build ./src/ --file ./src/AutoscalingAzureContainerInstances.Website/Dockerfile --tag ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest
     - name: Push the Docker image
-      run: docker push ./src/ --file ./src/AutoscalingAzureContainerInstances.Website/Dockerfile --tag ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest
+      run: docker push ghcr.io/tomkerkhove/autoscale-aci-with-azure-serverless-portal:latest
