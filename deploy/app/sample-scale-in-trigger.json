@@ -1,0 +1,69 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ActionGroup.Name": {
+            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
+            "type": "String"
+        },
+        "Alert.Name": {
+            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
+            "type": "String"
+        },
+        "Alert.Scope": {
+            "defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/contoso-orders/providers/Microsoft.ServiceBus/namespaces/contoso-messaging-landscape",
+            "type": "String"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "microsoft.insights/metricalerts",
+            "apiVersion": "2018-03-01",
+            "name": "[parameters('Alert.Name')]",
+            "location": "global",
+            "properties": {
+                "description": "Trigger to scale our Contoso app in",
+                "severity": 4,
+                "enabled": true,
+                "scopes": [
+                    "[parameters('Alert.Scope')]"
+                ],
+                "evaluationFrequency": "PT1M",
+                "windowSize": "PT1M",
+                "criteria": {
+                    "allOf": [
+                        {
+                            "threshold": 100,
+                            "name": "Metric1",
+                            "metricNamespace": "Microsoft.ServiceBus/namespaces",
+                            "metricName": "ActiveMessages",
+                            "dimensions": [
+                                {
+                                    "name": "EntityName",
+                                    "operator": "Include",
+                                    "values": [
+                                        "orders"
+                                    ]
+                                }
+                            ],
+                            "operator": "LessThanOrEqual",
+                            "timeAggregation": "Average",
+                            "criterionType": "StaticThresholdCriterion"
+                        }
+                    ],
+                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+                },
+                "autoMitigate": false,
+                "targetResourceType": "Microsoft.ServiceBus/namespaces",
+                "targetResourceRegion": "westeurope",
+                "actions": [
+                    {
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ActionGroup.Name'))]",
+                        "webHookProperties": {}
+                    }
+                ]
+            }
+        }
+    ]
+}
