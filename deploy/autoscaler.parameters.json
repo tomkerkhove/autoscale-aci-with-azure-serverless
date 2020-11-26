@@ -1,0 +1,72 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ApiConnections.AzureContainerInstances.Name": {
+            "value": null
+        },
+        "ApiConnections.AzureResourceManager.Name": {
+            "value": null
+        },
+        "ApiConnections.AzureBlob.Name": {
+            "value": null
+        },
+        "topics_contoso_events_name": {
+            "value": null
+        },
+        "connections_azureeventgridpublish_name": {
+            "value": null
+        },
+        "ApiConnections.AzureEventGrid.Name": {
+            "value": null
+        },
+        "Workflows.Autoscaler.ScaleIn": {
+            "value": null
+        },
+        "workflows_contoso_alerts_notifications_name": {
+            "value": null
+        },
+        "Workflows.Autoscaler.ScaleOut": {
+            "value": null
+        },
+        "Storage.Name": {
+            "value": null
+        },
+        "workflows_contoso_autoscaler_notifications_name": {
+            "value": null
+        },
+        "EventGrid.Topic.Name": {
+            "value": null
+        },
+        "Workflows.ScaleController.ScaleIn": {
+            "value": null
+        },
+        "Workflows.ScaleController.ScaleOut": {
+            "value": null
+        },
+        "actionGroups_Contoso_Autoscaler___Scale_In_Trigger_name": {
+            "value": null
+        },
+        "metricalerts_Contoso_Autoscaler___Scale_In_Trigger_name": {
+            "value": null
+        },
+        "actionGroups_Contoso_Autoscaler___Scale_Out_Trigger_name": {
+            "value": null
+        },
+        "metricalerts_Contoso_Autoscaler___Scale_Out_Trigger_name": {
+            "value": null
+        },
+        "namespaces_contoso_messaging_landscape_externalid": {
+            "value": null
+        },
+        "containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid": {
+            "value": null
+        },
+        "containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid": {
+            "value": null
+        },
+        "deployments___encodeURIComponent__deploy_new_instance___guid_____externalid": {
+            "value": null
+        }
+    }
+}
