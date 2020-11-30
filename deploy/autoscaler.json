@@ -2,6 +2,9 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "Application.ResourceGroup.Name": {
+            "type": "String"
+        },
         "ApiConnections.AzureContainerInstances.Name": {
             "defaultValue": "aci",
             "type": "String"
@@ -78,6 +81,14 @@
         "ScaleCriteria.ResourceId": {
             "defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-orders/providers/Microsoft.ServiceBus/namespaces/scalo-messaging-landscape",
             "type": "String"
+        },
+        "ScalingDefinition.MaxReplicas": {
+            "defaultValue": 10,
+            "type": "int"
+        },
+        "ScalingDefinition.MinReplicas": {
+            "defaultValue": 0,
+            "type": "int"
         },
         "ScaleTriggers.ActionGroup.ScaleIn.Name": {
             "defaultValue": "Contoso Autoscaler - Scale In Trigger",
@@ -399,6 +410,12 @@
                                 "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
                             }
                         }
+                    },
+                    "ScalingDefinition.MaxReplicas":{
+                        "value": "[parameters('ScalingDefinition.MaxReplicas')]"
+                    },
+                    "ScalingDefinition.MinReplicas":{
+                        "value": "[parameters('ScalingDefinition.MinReplicas')]"
                     }
                 }
             },
@@ -469,10 +486,6 @@
             "apiVersion": "2017-07-01",
             "name": "[parameters('Workflows.ScaleController.ScaleIn')]",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
-            ],
             "properties": {
                 "state": "Enabled",
                 "definition": {
@@ -484,7 +497,6 @@
                             "type": "Object"
                         },
                         "ResourceGroup.Name": {
-                            "defaultValue": "scalo-orders",
                             "type": "String"
                         },
                         "ScalingDefinition.MaxReplicas": {
@@ -692,18 +704,31 @@
                         "value": {
                             "aci": {
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                                "connectionName": "aci-1",
+                                "connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
                                 "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
                             },
                             "azureeventgridpublish": {
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
-                                "connectionName": "azureeventgridpublish-1",
+                                "connectionName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
                                 "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
                             }
                         }
-                    }
+                    },
+                    "ScalingDefinition.MaxReplicas":{
+                        "value": "[parameters('ScalingDefinition.MaxReplicas')]"
+                    },
+                    "ScalingDefinition.MinReplicas":{
+                        "value": "[parameters('ScalingDefinition.MinReplicas')]"
+                    },
+                    "ResourceGroup.Name":{
+                        "value": "[parameters('Application.ResourceGroup.Name')]"
+                    },
                 }
-            }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
+            ]
         },
         {
             "type": "Microsoft.Logic/workflows",
