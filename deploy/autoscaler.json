@@ -34,32 +34,73 @@
             "defaultValue": "scalo-events-event-grid-scheme",
             "type": "String"
         },
+        "ScaleCriteria.ScaleIn.ActionGroup.Name": {
+            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
+            "type": "String"
+        },
+        "ScaleCriteria.Metric.Namespace": {
+            "type": "String"
+        },
+        "ScaleCriteria.Metric.Name": {
+            "type": "String"
+        },
+        "ScaleCriteria.Metric.Dimension": {
+            "type": "array"
+        },
+        "ScaleCriteria.ScaleIn.Operator": {
+            "type": "String",
+            "allowedValues": [ "Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual" ]
+        },
+        "ScaleCriteria.ScaleIn.Threshold": {
+            "defaultValue": 100,
+            "type": "int"
+        },
+        "ScaleCriteria.ScaleIn.Aggregation": {
+            "type": "String",
+            "allowedValues": [ "Average", "Minimum", "Maximum", "Total" ]
+        },
+        "ScaleCriteria.ScaleOut.Operator": {
+            "type": "String",
+            "allowedValues": [ "Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual" ]
+        },
+        "ScaleCriteria.ScaleOut.Threshold": {
+            "defaultValue": 100,
+            "type": "int"
+        },
+        "ScaleCriteria.ScaleOut.Aggregation": {
+            "type": "String",
+            "allowedValues": [ "Average", "Minimum", "Maximum", "Total" ]
+        },
+        "ScaleCriteria.ScaleOut.ActionGroup.Name": {
+            "defaultValue": "Contoso Autoscaler - Scale Out Trigger",
+            "type": "String"
+        },
+        "ScaleCriteria.ResourceId": {
+            "defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-orders/providers/Microsoft.ServiceBus/namespaces/scalo-messaging-landscape",
+            "type": "String"
+        },
+        "ScaleTriggers.ActionGroup.ScaleIn.Name": {
+            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
+            "type": "String"
+        },
+        "ScaleTriggers.ActionGroup.ScaleIn.ShortName": {
+            "defaultValue": "autoscaleout",
+            "type": "String"
+        },
+        "ScaleTriggers.ActionGroup.ScaleOut.Name": {
+            "defaultValue": "Contoso Autoscaler - Scale Out Trigger",
+            "type": "String"
+        },
+        "ScaleTriggers.ActionGroup.ScaleOut.ShortName": {
+            "defaultValue": "autoscaleout",
+            "type": "String"
+        },
         "Workflows.ScaleController.ScaleIn": {
             "defaultValue": "scalo-autoscaler-scale-controller-in",
             "type": "String"
         },
         "Workflows.ScaleController.ScaleOut": {
             "defaultValue": "scalo-autoscaler-scale-controller-out",
-            "type": "String"
-        },
-        "actionGroups_Contoso_Autoscaler___Scale_In_Trigger_name": {
-            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
-            "type": "String"
-        },
-        "metricalerts_Contoso_Autoscaler___Scale_In_Trigger_name": {
-            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
-            "type": "String"
-        },
-        "actionGroups_Contoso_Autoscaler___Scale_Out_Trigger_name": {
-            "defaultValue": "Contoso Autoscaler - Scale Out Trigger",
-            "type": "String"
-        },
-        "metricalerts_Contoso_Autoscaler___Scale_Out_Trigger_name": {
-            "defaultValue": "Contoso Autoscaler - Scale Out Trigger",
-            "type": "String"
-        },
-        "namespaces_contoso_messaging_landscape_externalid": {
-            "defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-orders/providers/Microsoft.ServiceBus/namespaces/scalo-messaging-landscape",
             "type": "String"
         },
         "containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid": {
@@ -75,7 +116,10 @@
             "type": "String"
         }
     },
-    "variables": {},
+    "variables": {
+        "ScaleCriteria.Dimension.Default": [],
+        "ScaleCriteria.Metric.Dimension": "[coalesce(parameters('ScaleCriteria.Metric.Dimension'), variables('ScaleCriteria.Dimension.Default'))]"
+    },
     "resources": [
         {
             "type": "Microsoft.EventGrid/topics",
@@ -83,8 +127,7 @@
             "name": "[parameters('EventGrid.Topic.Name')]",
             "location": "[resourceGroup().location]",
             "properties": {
-                "inputSchema": "EventGridSchema",
-                "publicNetworkAccess": "Enabled"
+                "inputSchema": "EventGridSchema"
             }
         },
         {
@@ -102,18 +145,35 @@
             }
         },
         {
-            "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
-            "location": "[resourceGroup().location]",
-            "kind": "V1",
+            "type": "Microsoft.Storage/storageAccounts/blobServices",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('Storage.Name'), '/default')]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
             "properties": {
-                "displayName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
-                "customParameterValues": {},
-                "api": {
-                    "id": "[concat('/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci')]"
+                "cors": {
+                    "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                    "enabled": false
                 }
-            }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(parameters('Storage.Name'), '/default/templates')]",
+            "properties": {
+                "publicAccess": "Blob"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('Storage.Name'), 'default')]"
+            ]
         },
         {
             "type": "Microsoft.Web/connections",
@@ -122,7 +182,7 @@
             "location": "[resourceGroup().location]",
             "kind": "V1",
             "properties": {
-                "displayName": "live.com#tom.kerkhove@hotmail.com",
+                "displayName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
                 "customParameterValues": {},
                 "api": {
                     "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
@@ -136,10 +196,10 @@
             "location": "[resourceGroup().location]",
             "kind": "V1",
             "properties": {
-                "displayName": "live.com#tom.kerkhove@hotmail.com",
+                "displayName": "[parameters('ApiConnections.AzureResourceManager.Name')]",
                 "customParameterValues": {},
                 "api": {
-                    "id": "[concat('/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm')]"
+                    "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm"
                 }
             }
         },
@@ -150,10 +210,10 @@
             "location": "[resourceGroup().location]",
             "kind": "V1",
             "properties": {
-                "displayName": "deployment-archive",
+                "displayName": "[parameters('ApiConnections.AzureBlob.Name')]",
                 "customParameterValues": {},
                 "api": {
-                    "id": "[concat('/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob')]"
+                    "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob'"
                 }
             }
         },
@@ -164,7 +224,7 @@
             "location": "[resourceGroup().location]",
             "kind": "V1",
             "properties": {
-                "displayName": "event-topic-event-grid-scheme",
+                "displayName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
                 "customParameterValues": {},
                 "api": {
                     "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
@@ -174,113 +234,90 @@
         {
             "type": "microsoft.insights/metricalerts",
             "apiVersion": "2018-03-01",
-            "name": "[parameters('metricalerts_Contoso_Autoscaler___Scale_In_Trigger_name')]",
+            "name": "[parameters('ScaleCriteria.ScaleIn.ActionGroup.Name')]",
             "location": "global",
-            "dependsOn": [
-                "[resourceId('microsoft.insights/actionGroups', parameters('actionGroups_Contoso_Autoscaler___Scale_In_Trigger_name'))]"
-            ],
             "properties": {
-                "description": "Trigger to scale our Contoso app in",
+                "description": "Scaling criteria to trigger a scale in action",
                 "severity": 4,
                 "enabled": true,
                 "scopes": [
-                    "[parameters('namespaces_contoso_messaging_landscape_externalid')]"
+                    "[parameters('ScaleCriteria.ResourceId')]"
                 ],
                 "evaluationFrequency": "PT1M",
                 "windowSize": "PT5M",
                 "criteria": {
                     "allOf": [
                         {
-                            "threshold": 100,
+                            "threshold": "[parameters('ScaleCriteria.ScaleIn.Threshold')]",
                             "name": "Metric1",
-                            "metricNamespace": "Microsoft.ServiceBus/namespaces",
-                            "metricName": "ActiveMessages",
-                            "dimensions": [
-                                {
-                                    "name": "EntityName",
-                                    "operator": "Include",
-                                    "values": [
-                                        "orders"
-                                    ]
-                                }
-                            ],
-                            "operator": "LessThanOrEqual",
-                            "timeAggregation": "Average",
+                            "metricNamespace": "[parameters('ScaleCriteria.Metric.Namespace')]",
+                            "metricName": "[parameters('ScaleCriteria.Metric.Name')]",
+                            "dimensions": "[variables('ScaleCriteria.Metric.Dimension')]",
+                            "operator": "[parameters('ScaleCriteria.ScaleIn.Operator')]",
+                            "timeAggregation": "[parameters('ScaleCriteria.ScaleIn.Aggregation')]",
                             "criterionType": "StaticThresholdCriterion"
                         }
                     ],
                     "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
                 },
                 "autoMitigate": false,
-                "targetResourceType": "Microsoft.ServiceBus/namespaces",
-                "targetResourceRegion": "westeurope",
                 "actions": [
                     {
-                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroups_Contoso_Autoscaler___Scale_In_Trigger_name'))]",
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleIn.Name'))]",
                         "webHookProperties": {}
                     }
                 ]
-            }
+            },
+            "dependsOn": [
+                "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleIn.Name'))]"
+            ]
         },
         {
             "type": "microsoft.insights/metricalerts",
             "apiVersion": "2018-03-01",
-            "name": "[parameters('metricalerts_Contoso_Autoscaler___Scale_Out_Trigger_name')]",
+            "name": "[parameters('ScaleCriteria.ScaleOut.ActionGroup.Name')]",
             "location": "global",
-            "dependsOn": [
-                "[resourceId('microsoft.insights/actionGroups', parameters('actionGroups_Contoso_Autoscaler___Scale_Out_Trigger_name'))]"
-            ],
             "properties": {
-                "description": "Trigger to scale our Contoso app out",
+                "description": "Scaling criteria to trigger a scale out action",
                 "severity": 4,
                 "enabled": true,
                 "scopes": [
-                    "[parameters('namespaces_contoso_messaging_landscape_externalid')]"
+                    "[parameters('ScaleCriteria.ResourceId')]"
                 ],
                 "evaluationFrequency": "PT1M",
                 "windowSize": "PT5M",
                 "criteria": {
                     "allOf": [
                         {
-                            "threshold": 250,
+                            "threshold": "[parameters('ScaleCriteria.ScaleOut.Threshold')]",
                             "name": "Metric1",
-                            "metricNamespace": "Microsoft.ServiceBus/namespaces",
-                            "metricName": "ActiveMessages",
-                            "dimensions": [
-                                {
-                                    "name": "EntityName",
-                                    "operator": "Include",
-                                    "values": [
-                                        "orders"
-                                    ]
-                                }
-                            ],
-                            "operator": "GreaterThan",
-                            "timeAggregation": "Average",
+                            "metricNamespace": "[parameters('ScaleCriteria.Metric.Namespace')]",
+                            "metricName": "[parameters('ScaleCriteria.Metric.Name')]",
+                            "dimensions": "[variables('ScaleCriteria.Metric.Dimension')]",
+                            "operator": "[parameters('ScaleCriteria.ScaleOut.Operator')]",
+                            "timeAggregation": "[parameters('ScaleCriteria.ScaleOut.Aggregation')]",
                             "criterionType": "StaticThresholdCriterion"
                         }
                     ],
                     "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
                 },
                 "autoMitigate": false,
-                "targetResourceType": "Microsoft.ServiceBus/namespaces",
-                "targetResourceRegion": "westeurope",
                 "actions": [
                     {
-                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('actionGroups_Contoso_Autoscaler___Scale_Out_Trigger_name'))]",
+                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleOut.Name'))]",
                         "webHookProperties": {}
                     }
                 ]
-            }
+            },
+            "dependsOn": [
+                "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleOut.Name'))]"
+            ]
         },
         {
             "type": "Microsoft.Logic/workflows",
             "apiVersion": "2017-07-01",
             "name": "[parameters('Workflows.Autoscaler.ScaleIn')]",
             "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]"
-            ],
             "properties": {
                 "state": "Enabled",
                 "definition": {
@@ -358,90 +395,24 @@
                         "value": {
                             "aci": {
                                 "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                                "connectionName": "aci-1",
+                                "connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
                                 "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
                             }
                         }
                     }
                 }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
-            ],
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
             },
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                },
-                "deleteRetentionPolicy": {
-                    "enabled": false
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/fileServices",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
-            ],
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "properties": {
-                "protocolSettings": {
-                    "smb": {}
-                },
-                "cors": {
-                    "corsRules": []
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/queueServices",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
-            ],
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/tableServices",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
-            ],
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                }
-            }
+                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]"
+            ]
         },
         {
             "type": "microsoft.insights/actionGroups",
             "apiVersion": "2019-03-01",
-            "name": "[parameters('actionGroups_Contoso_Autoscaler___Scale_In_Trigger_name')]",
+            "name": "[parameters('ScaleTriggers.ActionGroup.ScaleIn.Name')]",
             "location": "Global",
-            "dependsOn": [
-                "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]",
-            ],
             "properties": {
-                "groupShortName": "autoscalein",
+                "groupShortName": "[parameters('ScaleTriggers.ActionGroup.ScaleIn.ShortName')]",
                 "enabled": true,
                 "emailReceivers": [],
                 "smsReceivers": [],
@@ -454,23 +425,23 @@
                     {
                         "name": "Scale Controller",
                         "resourceId": "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]",
-                        "callbackUrl": "https://prod-09.westeurope.logic.azure.com:443/workflows/bb7c00d178a449718b0d41ae58aac60f/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=vmyYNfaE3jvbpeOtWba53n0quB5NmWMUTS78BfMgIRE",
+                        "callbackUrl": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn')), '/triggers/manual'), '2016-06-01').value]",
                         "useCommonAlertSchema": false
                     }
                 ],
                 "azureFunctionReceivers": []
-            }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]",
+            ]
         },
         {
             "type": "microsoft.insights/actionGroups",
             "apiVersion": "2019-03-01",
-            "name": "[parameters('actionGroups_Contoso_Autoscaler___Scale_Out_Trigger_name')]",
+            "name": "[parameters('ScaleTriggers.ActionGroup.ScaleOut.Name')]",
             "location": "Global",
-            "dependsOn": [
-                "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]"
-            ],
             "properties": {
-                "groupShortName": "autoscaleout",
+                "groupShortName": "[parameters('ScaleTriggers.ActionGroup.ScaleOut.ShortName')]",
                 "enabled": true,
                 "emailReceivers": [],
                 "smsReceivers": [],
@@ -483,12 +454,15 @@
                     {
                         "name": "Scale Controller",
                         "resourceId": "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]",
-                        "callbackUrl": "https://prod-125.westeurope.logic.azure.com:443/workflows/4d8f1dc5e6694f65b33209963ac603ce/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=iQwZMhRgavWGpwpdnBxo58SE72Nvm0MMwbgKbJ9tBhs",
+                        "callbackUrl": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut')), '/triggers/manual'), '2016-06-01').value]",
                         "useCommonAlertSchema": false
                     }
                 ],
                 "azureFunctionReceivers": []
-            }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]"
+            ]
         },
         {
             "type": "Microsoft.Logic/workflows",
@@ -952,20 +926,6 @@
                         }
                     }
                 }
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default/templates')]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('Storage.Name'), 'default')]",
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
-            ],
-            "properties": {
-                "defaultEncryptionScope": "$account-encryption-key",
-                "denyEncryptionScopeOverride": false,
-                "publicAccess": "Blob"
             }
         },
         {
