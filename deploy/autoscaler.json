@@ -1,1166 +1,1143 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
-        "Application.ResourceGroup.Name": {
-            "type": "String"
-        },
-        "ApiConnections.AzureContainerInstances.Name": {
-            "defaultValue": "aci",
-            "type": "String"
-        },
-        "ApiConnections.AzureResourceManager.Name": {
-            "defaultValue": "arm",
-            "type": "String"
-        },
-        "ApiConnections.AzureBlob.Name": {
-            "defaultValue": "azureblob",
-            "type": "String"
-        },
-        "ApiConnections.AzureEventGrid.Name": {
-            "defaultValue": "azureeventgridpublish-1",
-            "type": "String"
-        },
-        "Workflows.Autoscaler.ScaleIn": {
-            "defaultValue": "scalo-autoscaler-scale-in",
-            "type": "String"
-        },
-        "Workflows.Autoscaler.ScaleOut": {
-            "defaultValue": "scalo-autoscaler-scale-out",
-            "type": "String"
-        },
-        "Storage.Name": {
-            "defaultValue": "scaloautoscaler",
-            "type": "String"
-        },
-        "EventGrid.Topic.Name": {
-            "defaultValue": "scalo-events-event-grid-scheme",
-            "type": "String"
-        },
-        "ScaleCriteria.ScaleIn.ActionGroup.Name": {
-            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
-            "type": "String"
-        },
-        "ScaleCriteria.Metric.Namespace": {
-            "type": "String"
-        },
-        "ScaleCriteria.Metric.Name": {
-            "type": "String"
-        },
-        "ScaleCriteria.Metric.Dimension": {
-            "type": "array"
-        },
-        "ScaleCriteria.ScaleIn.Operator": {
-            "type": "String",
-            "allowedValues": [ "Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual" ]
-        },
-        "ScaleCriteria.ScaleIn.Threshold": {
-            "defaultValue": 100,
-            "type": "int"
-        },
-        "ScaleCriteria.ScaleIn.Aggregation": {
-            "type": "String",
-            "allowedValues": [ "Average", "Minimum", "Maximum", "Total" ]
-        },
-        "ScaleCriteria.ScaleOut.Operator": {
-            "type": "String",
-            "allowedValues": [ "Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual" ]
-        },
-        "ScaleCriteria.ScaleOut.Threshold": {
-            "defaultValue": 100,
-            "type": "int"
-        },
-        "ScaleCriteria.ScaleOut.Aggregation": {
-            "type": "String",
-            "allowedValues": [ "Average", "Minimum", "Maximum", "Total" ]
-        },
-        "ScaleCriteria.ScaleOut.ActionGroup.Name": {
-            "defaultValue": "Contoso Autoscaler - Scale Out Trigger",
-            "type": "String"
-        },
-        "ScaleCriteria.ResourceId": {
-            "defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-orders/providers/Microsoft.ServiceBus/namespaces/scalo-messaging-landscape",
-            "type": "String"
-        },
-        "ScalingDefinition.MaxReplicas": {
-            "defaultValue": 10,
-            "type": "int"
-        },
-        "ScalingDefinition.MinReplicas": {
-            "defaultValue": 0,
-            "type": "int"
-        },
-        "ScaleTriggers.ActionGroup.ScaleIn.Name": {
-            "defaultValue": "Contoso Autoscaler - Scale In Trigger",
-            "type": "String"
-        },
-        "ScaleTriggers.ActionGroup.ScaleIn.ShortName": {
-            "defaultValue": "autoscaleout",
-            "type": "String"
-        },
-        "ScaleTriggers.ActionGroup.ScaleOut.Name": {
-            "defaultValue": "Contoso Autoscaler - Scale Out Trigger",
-            "type": "String"
-        },
-        "ScaleTriggers.ActionGroup.ScaleOut.ShortName": {
-            "defaultValue": "autoscaleout",
-            "type": "String"
-        },
-        "Workflows.ScaleController.ScaleIn": {
-            "defaultValue": "scalo-autoscaler-scale-controller-in",
-            "type": "String"
-        },
-        "Workflows.ScaleController.ScaleOut": {
-            "defaultValue": "scalo-autoscaler-scale-controller-out",
-            "type": "String"
-        },
-        "containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid": {
-            "defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(first(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']).name)}",
-            "type": "String"
-        },
-        "containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid": {
-            "defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerOutputs()['queries']['resourceGroupName'])}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(triggerOutputs()['queries']['containerGroupName'])}",
-            "type": "String"
-        },
-        "deployments___encodeURIComponent__deploy_new_instance___guid_____externalid": {
-            "defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerBody()?['resourceGroupName'])}/providers/Microsoft.Resources/deployments/@{encodeURIComponent('deploy-new-instance-',guid())}",
-            "type": "String"
-        }
-    },
-    "variables": {
-        "ScaleCriteria.Dimension.Default": [],
-        "ScaleCriteria.Metric.Dimension": "[coalesce(parameters('ScaleCriteria.Metric.Dimension'), variables('ScaleCriteria.Dimension.Default'))]"
-    },
-    "resources": [
-        {
-            "type": "Microsoft.EventGrid/topics",
-            "apiVersion": "2020-06-01",
-            "name": "[parameters('EventGrid.Topic.Name')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "inputSchema": "EventGridSchema"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[parameters('Storage.Name')]",
-            "location": "[resourceGroup().location]",
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "kind": "StorageV2",
-            "properties": {
-                "accessTier": "Hot"
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default')]",
-            "sku": {
-                "name": "Standard_LRS",
-                "tier": "Standard"
-            },
-            "properties": {
-                "cors": {
-                    "corsRules": []
-                },
-                "deleteRetentionPolicy": {
-                    "enabled": false
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
-            "apiVersion": "2020-08-01-preview",
-            "name": "[concat(parameters('Storage.Name'), '/default/templates')]",
-            "properties": {
-                "publicAccess": "Blob"
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('Storage.Name'), 'default')]"
-            ]
-        },
-        {
-            "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
-            "location": "[resourceGroup().location]",
-            "kind": "V1",
-            "properties": {
-                "displayName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
-                "customParameterValues": {},
-                "api": {
-                    "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('ApiConnections.AzureResourceManager.Name')]",
-            "location": "[resourceGroup().location]",
-            "kind": "V1",
-            "properties": {
-                "displayName": "[parameters('ApiConnections.AzureResourceManager.Name')]",
-                "customParameterValues": {},
-                "api": {
-                    "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('ApiConnections.AzureBlob.Name')]",
-            "location": "[resourceGroup().location]",
-            "kind": "V1",
-            "properties": {
-                "displayName": "[parameters('ApiConnections.AzureBlob.Name')]",
-                "customParameterValues": {},
-                "api": {
-                    "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob'"
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Web/connections",
-            "apiVersion": "2016-06-01",
-            "name": "[parameters('ApiConnections.AzureEventGrid.Name')]",
-            "location": "[resourceGroup().location]",
-            "kind": "V1",
-            "properties": {
-                "displayName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
-                "customParameterValues": {},
-                "api": {
-                    "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
-                }
-            }
-        },
-        {
-            "type": "microsoft.insights/metricalerts",
-            "apiVersion": "2018-03-01",
-            "name": "[parameters('ScaleCriteria.ScaleIn.ActionGroup.Name')]",
-            "location": "global",
-            "properties": {
-                "description": "Scaling criteria to trigger a scale in action",
-                "severity": 4,
-                "enabled": true,
-                "scopes": [
-                    "[parameters('ScaleCriteria.ResourceId')]"
-                ],
-                "evaluationFrequency": "PT1M",
-                "windowSize": "PT5M",
-                "criteria": {
-                    "allOf": [
-                        {
-                            "threshold": "[parameters('ScaleCriteria.ScaleIn.Threshold')]",
-                            "name": "Metric1",
-                            "metricNamespace": "[parameters('ScaleCriteria.Metric.Namespace')]",
-                            "metricName": "[parameters('ScaleCriteria.Metric.Name')]",
-                            "dimensions": "[variables('ScaleCriteria.Metric.Dimension')]",
-                            "operator": "[parameters('ScaleCriteria.ScaleIn.Operator')]",
-                            "timeAggregation": "[parameters('ScaleCriteria.ScaleIn.Aggregation')]",
-                            "criterionType": "StaticThresholdCriterion"
-                        }
-                    ],
-                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
-                },
-                "autoMitigate": false,
-                "actions": [
-                    {
-                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleIn.Name'))]",
-                        "webHookProperties": {}
-                    }
-                ]
-            },
-            "dependsOn": [
-                "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleIn.Name'))]"
-            ]
-        },
-        {
-            "type": "microsoft.insights/metricalerts",
-            "apiVersion": "2018-03-01",
-            "name": "[parameters('ScaleCriteria.ScaleOut.ActionGroup.Name')]",
-            "location": "global",
-            "properties": {
-                "description": "Scaling criteria to trigger a scale out action",
-                "severity": 4,
-                "enabled": true,
-                "scopes": [
-                    "[parameters('ScaleCriteria.ResourceId')]"
-                ],
-                "evaluationFrequency": "PT1M",
-                "windowSize": "PT5M",
-                "criteria": {
-                    "allOf": [
-                        {
-                            "threshold": "[parameters('ScaleCriteria.ScaleOut.Threshold')]",
-                            "name": "Metric1",
-                            "metricNamespace": "[parameters('ScaleCriteria.Metric.Namespace')]",
-                            "metricName": "[parameters('ScaleCriteria.Metric.Name')]",
-                            "dimensions": "[variables('ScaleCriteria.Metric.Dimension')]",
-                            "operator": "[parameters('ScaleCriteria.ScaleOut.Operator')]",
-                            "timeAggregation": "[parameters('ScaleCriteria.ScaleOut.Aggregation')]",
-                            "criterionType": "StaticThresholdCriterion"
-                        }
-                    ],
-                    "odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
-                },
-                "autoMitigate": false,
-                "actions": [
-                    {
-                        "actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleOut.Name'))]",
-                        "webHookProperties": {}
-                    }
-                ]
-            },
-            "dependsOn": [
-                "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleOut.Name'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2017-07-01",
-            "name": "[parameters('Workflows.Autoscaler.ScaleIn')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "state": "Enabled",
-                "definition": {
-                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                        "$connections": {
-                            "defaultValue": {},
-                            "type": "Object"
-                        },
-                        "ScalingDefinition.MaxReplicas": {
-                            "defaultValue": 10,
-                            "type": "Int"
-                        },
-                        "ScalingDefinition.MinReplicas": {
-                            "defaultValue": 0,
-                            "type": "Int"
-                        }
-                    },
-                    "triggers": {
-                        "manual": {
-                            "type": "Request",
-                            "kind": "Http",
-                            "inputs": {
-                                "method": "DELETE"
-                            }
-                        }
-                    },
-                    "actions": {
-                        "Delete_Instance": {
-                            "runAfter": {},
-                            "type": "ApiConnection",
-                            "inputs": {
-                                "host": {
-                                    "connection": {
-                                        "name": "@parameters('$connections')['aci']['connectionId']"
-                                    }
-                                },
-                                "method": "delete",
-                                "path": "[parameters('containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid')]",
-                                "queries": {
-                                    "x-ms-api-version": "2019-12-01"
-                                }
-                            }
-                        },
-                        "Send_Created_Response": {
-                            "runAfter": {
-                                "Delete_Instance": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type": "Response",
-                            "kind": "Http",
-                            "inputs": {
-                                "statusCode": 201
-                            }
-                        },
-                        "Send_Internal_Server_Error_Response": {
-                            "runAfter": {
-                                "Delete_Instance": [
-                                    "Failed"
-                                ]
-                            },
-                            "type": "Response",
-                            "kind": "Http",
-                            "inputs": {
-                                "statusCode": 500
-                            }
-                        }
-                    },
-                    "outputs": {}
-                },
-                "parameters": {
-                    "$connections": {
-                        "value": {
-                            "aci": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                                "connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
-                            }
-                        }
-                    },
-                    "ScalingDefinition.MaxReplicas":{
-                        "value": "[parameters('ScalingDefinition.MaxReplicas')]"
-                    },
-                    "ScalingDefinition.MinReplicas":{
-                        "value": "[parameters('ScalingDefinition.MinReplicas')]"
-                    }
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]"
-            ]
-        },
-        {
-            "type": "microsoft.insights/actionGroups",
-            "apiVersion": "2019-03-01",
-            "name": "[parameters('ScaleTriggers.ActionGroup.ScaleIn.Name')]",
-            "location": "Global",
-            "properties": {
-                "groupShortName": "[parameters('ScaleTriggers.ActionGroup.ScaleIn.ShortName')]",
-                "enabled": true,
-                "emailReceivers": [],
-                "smsReceivers": [],
-                "webhookReceivers": [],
-                "itsmReceivers": [],
-                "azureAppPushReceivers": [],
-                "automationRunbookReceivers": [],
-                "voiceReceivers": [],
-                "logicAppReceivers": [
-                    {
-                        "name": "Scale Controller",
-                        "resourceId": "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]",
-                        "callbackUrl": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn')), '/triggers/manual'), '2016-06-01').value]",
-                        "useCommonAlertSchema": false
-                    }
-                ],
-                "azureFunctionReceivers": []
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]",
-            ]
-        },
-        {
-            "type": "microsoft.insights/actionGroups",
-            "apiVersion": "2019-03-01",
-            "name": "[parameters('ScaleTriggers.ActionGroup.ScaleOut.Name')]",
-            "location": "Global",
-            "properties": {
-                "groupShortName": "[parameters('ScaleTriggers.ActionGroup.ScaleOut.ShortName')]",
-                "enabled": true,
-                "emailReceivers": [],
-                "smsReceivers": [],
-                "webhookReceivers": [],
-                "itsmReceivers": [],
-                "azureAppPushReceivers": [],
-                "automationRunbookReceivers": [],
-                "voiceReceivers": [],
-                "logicAppReceivers": [
-                    {
-                        "name": "Scale Controller",
-                        "resourceId": "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]",
-                        "callbackUrl": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut')), '/triggers/manual'), '2016-06-01').value]",
-                        "useCommonAlertSchema": false
-                    }
-                ],
-                "azureFunctionReceivers": []
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2017-07-01",
-            "name": "[parameters('Workflows.ScaleController.ScaleIn')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "state": "Enabled",
-                "definition": {
-                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                        "$connections": {
-                            "defaultValue": {},
-                            "type": "Object"
-                        },
-                        "ResourceGroup.Name": {
-                            "type": "String"
-                        },
-                        "ScalingDefinition.MaxReplicas": {
-                            "defaultValue": 10,
-                            "type": "Int"
-                        },
-                        "ScalingDefinition.MinReplicas": {
-                            "defaultValue": 0,
-                            "type": "Int"
-                        }
-                    },
-                    "triggers": {
-                        "manual": {
-                            "type": "Request",
-                            "kind": "Http",
-                            "inputs": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "actions": {
-                        "Are_There_Instances_To_Scale_Down": {
-                            "actions": {
-                                "Determine_Instance_To_Delete": {
-                                    "runAfter": {},
-                                    "type": "Compose",
-                                    "inputs": "@first(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']).name"
-                                },
-                                "Do_We_Need_To_Scale_In": {
-                                    "actions": {
-                                        "Delete_Instance": {
-                                            "runAfter": {},
-                                            "type": "ApiConnection",
-                                            "inputs": {
-                                                "host": {
-                                                    "connection": {
-                                                        "name": "@parameters('$connections')['aci']['connectionId']"
-                                                    }
-                                                },
-                                                "method": "delete",
-                                                "path": "[parameters('containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid')]",
-                                                "queries": {
-                                                    "x-ms-api-version": "2019-12-01"
-                                                }
-                                            }
-                                        },
-                                        "Publish_Event": {
-                                            "runAfter": {
-                                                "Trigger_Scaler_To_Delete_Instance": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "ApiConnection",
-                                            "inputs": {
-                                                "body": [
-                                                    {
-                                                        "data": {
-                                                            "replicas": {
-                                                                "new": "@sub(length(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']), 1)",
-                                                                "old": "@length(body('Get_a_list_of_container_groups_in_a_resource_group')?['value'])"
-                                                            },
-                                                            "scalingDefinition": {
-                                                                "replicas": {
-                                                                    "max": "@parameters('ScalingDefinition.MaxReplicas')",
-                                                                    "min": "@parameters('ScalingDefinition.MinReplicas')"
-                                                                }
-                                                            }
-                                                        },
-                                                        "eventType": "Autoscaler.Scale.In",
-                                                        "id": "@{guid()}",
-                                                        "subject": "contoso/orders"
-                                                    }
-                                                ],
-                                                "host": {
-                                                    "connection": {
-                                                        "name": "@parameters('$connections')['azureeventgridpublish']['connectionId']"
-                                                    }
-                                                },
-                                                "method": "post",
-                                                "path": "/eventGrid/api/events"
-                                            }
-                                        },
-                                        "Terminate": {
-                                            "runAfter": {
-                                                "Trigger_Scaler_To_Delete_Instance": [
-                                                    "Failed"
-                                                ]
-                                            },
-                                            "type": "Terminate",
-                                            "inputs": {
-                                                "runError": {
-                                                    "message": "Unable to delete instance @{outputs('Determine_Instance_To_Delete')}"
-                                                },
-                                                "runStatus": "Failed"
-                                            }
-                                        },
-                                        "Trigger_Scaler_To_Delete_Instance": {
-                                            "runAfter": {
-                                                "Delete_Instance": [
-                                                    "Succeeded"
-                                                ]
-                                            },
-                                            "type": "Http",
-                                            "inputs": {
-                                                "method": "DELETE",
-                                                "uri": "https://prod-94.westeurope.logic.azure.com:443/workflows/c189809474194f57bbb20893e6469b52/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FsRXErLNanaEwplbXrf9FE71iBSW7amRoYaXb3MYnWo&resourceGroupName=@{parameters('ResourceGroup.Name')}&containerGroupName=@{outputs('Determine_Instance_To_Delete')}"
-                                            }
-                                        }
-                                    },
-                                    "runAfter": {
-                                        "Determine_Instance_To_Delete": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "else": {
-                                        "actions": {
-                                            "No_Action_Required": {
-                                                "runAfter": {},
-                                                "type": "Terminate",
-                                                "inputs": {
-                                                    "runStatus": "Succeeded"
-                                                }
-                                            }
-                                        }
-                                    },
-                                    "expression": {
-                                        "and": [
-                                            {
-                                                "greater": [
-                                                    "@outputs('Determine_Current_Replica_Count')",
-                                                    "@parameters('ScalingDefinition.MinReplicas')"
-                                                ]
-                                            }
-                                        ]
-                                    },
-                                    "type": "If"
-                                }
-                            },
-                            "runAfter": {
-                                "Determine_Current_Replica_Count": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "else": {
-                                "actions": {
-                                    "Nothing_To_Scale_In": {
-                                        "runAfter": {},
-                                        "type": "Terminate",
-                                        "inputs": {
-                                            "runStatus": "Succeeded"
-                                        }
-                                    }
-                                }
-                            },
-                            "expression": {
-                                "and": [
-                                    {
-                                        "greater": [
-                                            "@outputs('Determine_Current_Replica_Count')",
-                                            0
-                                        ]
-                                    }
-                                ]
-                            },
-                            "type": "If"
-                        },
-                        "Determine_Current_Replica_Count": {
-                            "runAfter": {
-                                "Get_a_list_of_container_groups_in_a_resource_group": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type": "Compose",
-                            "inputs": "@length(body('Get_a_list_of_container_groups_in_a_resource_group')?['value'])"
-                        },
-                        "Get_a_list_of_container_groups_in_a_resource_group": {
-                            "runAfter": {},
-                            "type": "ApiConnection",
-                            "inputs": {
-                                "host": {
-                                    "connection": {
-                                        "name": "@parameters('$connections')['aci']['connectionId']"
-                                    }
-                                },
-                                "method": "get",
-                                "path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups",
-                                "queries": {
-                                    "x-ms-api-version": "2019-12-01"
-                                }
-                            }
-                        },
-                        "Send_acknowledge": {
-                            "runAfter": {},
-                            "type": "Response",
-                            "kind": "Http",
-                            "inputs": {
-                                "statusCode": 202
-                            }
-                        }
-                    },
-                    "outputs": {}
-                },
-                "parameters": {
-                    "$connections": {
-                        "value": {
-                            "aci": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                                "connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
-                            },
-                            "azureeventgridpublish": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
-                                "connectionName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
-                            }
-                        }
-                    },
-                    "ScalingDefinition.MaxReplicas":{
-                        "value": "[parameters('ScalingDefinition.MaxReplicas')]"
-                    },
-                    "ScalingDefinition.MinReplicas":{
-                        "value": "[parameters('ScalingDefinition.MinReplicas')]"
-                    },
-                    "ResourceGroup.Name":{
-                        "value": "[parameters('Application.ResourceGroup.Name')]"
-                    },
-                }
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2017-07-01",
-            "name": "[parameters('Workflows.ScaleController.ScaleOut')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
-            ],
-            "properties": {
-                "state": "Enabled",
-                "definition": {
-                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                        "$connections": {
-                            "defaultValue": {},
-                            "type": "Object"
-                        },
-                        "Resource.Prefix": {
-                            "defaultValue": "scalo-orders-worker-",
-                            "type": "String"
-                        },
-                        "ResourceGroup.Name": {
-                            "defaultValue": "scalo-orders",
-                            "type": "String"
-                        },
-                        "ScalingDefinition.MaxReplicas": {
-                            "defaultValue": 10,
-                            "type": "Int"
-                        },
-                        "ScalingDefinition.MinReplicas": {
-                            "defaultValue": 0,
-                            "type": "Int"
-                        }
-                    },
-                    "triggers": {
-                        "manual": {
-                            "type": "Request",
-                            "kind": "Http",
-                            "inputs": {
-                                "schema": {}
-                            }
-                        }
-                    },
-                    "actions": {
-                        "Determine_Current_Replica_Count": {
-                            "runAfter": {
-                                "Get_All_Current_Instances": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "type": "Compose",
-                            "inputs": "@length(body('Get_All_Current_Instances')?['value'])"
-                        },
-                        "Do_We_Need_To_Scale_Out": {
-                            "actions": {
-                                "Publish_Scale_Out_Event": {
-                                    "runAfter": {
-                                        "Trigger_Scaler_To_Add_Instance": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "ApiConnection",
-                                    "inputs": {
-                                        "body": [
-                                            {
-                                                "data": {
-                                                    "replicas": {
-                                                        "new": "@add(outputs('Determine_Current_Replica_Count'), 1)",
-                                                        "old": "@outputs('Determine_Current_Replica_Count')"
-                                                    },
-                                                    "scalingDefinition": {
-                                                        "replicas": {
-                                                            "max": "@parameters('ScalingDefinition.MaxReplicas')",
-                                                            "min": "@parameters('ScalingDefinition.MinReplicas')"
-                                                        }
-                                                    }
-                                                },
-                                                "eventType": "Autoscaler.Scale.Out",
-                                                "id": "@guid()",
-                                                "subject": "contoso/orders"
-                                            }
-                                        ],
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['azureeventgridpublish_1']['connectionId']"
-                                            }
-                                        },
-                                        "method": "post",
-                                        "path": "/eventGrid/api/events"
-                                    }
-                                },
-                                "Send_Internal_Server_Error": {
-                                    "runAfter": {
-                                        "Trigger_Scaler_To_Add_Instance": [
-                                            "Failed",
-                                            "TimedOut"
-                                        ]
-                                    },
-                                    "type": "Response",
-                                    "kind": "Http",
-                                    "inputs": {
-                                        "body": "Unable to add new instance",
-                                        "statusCode": 500
-                                    }
-                                },
-                                "Send_OK": {
-                                    "runAfter": {
-                                        "Publish_Scale_Out_Event": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "Response",
-                                    "kind": "Http",
-                                    "inputs": {
-                                        "statusCode": 200
-                                    }
-                                },
-                                "Terminate": {
-                                    "runAfter": {
-                                        "Send_Internal_Server_Error": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "Terminate",
-                                    "inputs": {
-                                        "runError": {
-                                            "message": "Unable to add new instance"
-                                        },
-                                        "runStatus": "Failed"
-                                    }
-                                },
-                                "Trigger_Scaler_To_Add_Instance": {
-                                    "runAfter": {},
-                                    "type": "Http",
-                                    "inputs": {
-                                        "body": {
-                                            "containerGroupName": "@{parameters('Resource.Prefix')}@{guid()}",
-                                            "resourceGroupName": "@{parameters('ResourceGroup.Name')}"
-                                        },
-                                        "method": "POST",
-                                        "uri": "https://prod-120.westeurope.logic.azure.com:443/workflows/6349d631cf1e4181a4a37bda3012c840/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=gZbVzTDhxCRT264TuUPPnws7UNOO15aRFfqJqhlrI7U"
-                                    }
-                                }
-                            },
-                            "runAfter": {
-                                "Determine_Current_Replica_Count": [
-                                    "Succeeded"
-                                ]
-                            },
-                            "else": {
-                                "actions": {
-                                    "No_Action_Required": {
-                                        "runAfter": {},
-                                        "type": "Terminate",
-                                        "inputs": {
-                                            "runStatus": "Succeeded"
-                                        }
-                                    },
-                                    "Send_Response": {
-                                        "runAfter": {
-                                            "No_Action_Required": [
-                                                "Succeeded"
-                                            ]
-                                        },
-                                        "type": "Response",
-                                        "kind": "Http",
-                                        "inputs": {
-                                            "statusCode": 200
-                                        }
-                                    }
-                                }
-                            },
-                            "expression": {
-                                "and": [
-                                    {
-                                        "less": [
-                                            "@outputs('Determine_Current_Replica_Count')",
-                                            "@parameters('ScalingDefinition.MaxReplicas')"
-                                        ]
-                                    }
-                                ]
-                            },
-                            "type": "If"
-                        },
-                        "Get_All_Current_Instances": {
-                            "runAfter": {},
-                            "type": "ApiConnection",
-                            "inputs": {
-                                "host": {
-                                    "connection": {
-                                        "name": "@parameters('$connections')['aci']['connectionId']"
-                                    }
-                                },
-                                "method": "get",
-                                "path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent('scalo-orders')}/providers/Microsoft.ContainerInstance/containerGroups",
-                                "queries": {
-                                    "x-ms-api-version": "2019-12-01"
-                                }
-                            }
-                        }
-                    },
-                    "outputs": {}
-                },
-                "parameters": {
-                    "$connections": {
-                        "value": {
-                            "aci": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-                                "connectionName": "aci-1",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
-                            },
-                            "azureeventgridpublish_1": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
-                                "connectionName": "azureeventgridpublish-1",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        {
-            "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2017-07-01",
-            "name": "[parameters('Workflows.Autoscaler.ScaleOut')]",
-            "location": "[resourceGroup().location]",
-            "dependsOn": [
-                "[resourceId('Microsoft.Storage/StorageAccounts', parameters('Storage.Name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureResourceManager.Name'))]",
-                "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureBlob.Name'))]"
-            ],
-            "properties": {
-                "state": "Enabled",
-                "definition": {
-                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {
-                        "$connections": {
-                            "defaultValue": {},
-                            "type": "Object"
-                        },
-                        "Deployment.Parameter.FileName": {
-                            "defaultValue": "worker.parameters.json",
-                            "type": "String"
-                        },
-                        "Deployment.Template.FileName": {
-                            "defaultValue": "worker.json",
-                            "type": "String"
-                        },
-                        "ScalingDefinition.MaxReplicas": {
-                            "defaultValue": 10,
-                            "type": "Int"
-                        },
-                        "ScalingDefinition.MinReplicas": {
-                            "defaultValue": 0,
-                            "type": "Int"
-                        }
-                    },
-                    "triggers": {
-                        "manual": {
-                            "type": "Request",
-                            "kind": "Http",
-                            "inputs": {
-                                "method": "POST",
-                                "schema": {
-                                    "properties": {
-                                        "containerGroupName": {
-                                            "type": "string"
-                                        },
-                                        "resourceGroupName": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "type": "object"
-                                }
-                            }
-                        }
-                    },
-                    "actions": {
-                        "Add_A_New_Instance": {
-                            "actions": {
-                                "Copy_Parameter_Templates": {
-                                    "runAfter": {
-                                        "Define_Instance_Parameter_URI": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "ApiConnection",
-                                    "inputs": {
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['azureblob']['connectionId']"
-                                            }
-                                        },
-                                        "method": "post",
-                                        "path": "/datasets/default/copyFile",
-                                        "queries": {
-                                            "destination": "@{outputs('Define_Instance_Parameter_URI')}",
-                                            "overwrite": false,
-                                            "queryParametersSingleEncoded": true,
-                                            "source": "/templates/@{parameters('Deployment.Parameter.FileName')}"
-                                        }
-                                    }
-                                },
-                                "Define_Instance_Parameter_URI": {
-                                    "runAfter": {},
-                                    "type": "Compose",
-                                    "inputs": "/templates/instances/@{triggerBody()?['containerGroupName']}.parameters.json"
-                                },
-                                "Delete_Template_Parameters_Blob": {
-                                    "runAfter": {
-                                        "Deploy_A_New_Instance": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "ApiConnection",
-                                    "inputs": {
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['azureblob']['connectionId']"
-                                            }
-                                        },
-                                        "method": "delete",
-                                        "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Define_Instance_Parameter_URI')))}"
-                                    }
-                                },
-                                "Deploy_A_New_Instance": {
-                                    "runAfter": {
-                                        "Upload_Template_Parameters": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "ApiConnection",
-                                    "inputs": {
-                                        "body": {
-                                            "properties": {
-                                                "mode": "Incremental",
-                                                "parametersLink": {
-                                                    "uri": "https://contosoordersautoscaler.blob.core.windows.net@{outputs('Define_Instance_Parameter_URI')}"
-                                                },
-                                                "templateLink": {
-                                                    "uri": "[concat('https://', parameters('Storage.Name'), '.blob.core.windows.net/templates/@{parameters(''Deployment.Template.FileName'')}')]"
-                                                }
-                                            }
-                                        },
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['arm']['connectionId']"
-                                            }
-                                        },
-                                        "method": "put",
-                                        "path": "[parameters('deployments___encodeURIComponent__deploy_new_instance___guid_____externalid')]",
-                                        "queries": {
-                                            "wait": true,
-                                            "x-ms-api-version": "2016-06-01"
-                                        }
-                                    }
-                                },
-                                "Get_Raw_Template_Parameters": {
-                                    "runAfter": {
-                                        "Copy_Parameter_Templates": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "ApiConnection",
-                                    "inputs": {
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['azureblob']['connectionId']"
-                                            }
-                                        },
-                                        "method": "get",
-                                        "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Define_Instance_Parameter_URI')))}/content",
-                                        "queries": {
-                                            "inferContentType": true
-                                        }
-                                    }
-                                },
-                                "Replace_Placeholder_With_Instance_Name": {
-                                    "runAfter": {
-                                        "Get_Raw_Template_Parameters": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "Compose",
-                                    "inputs": "@replace(base64ToString(body('Get_Raw_Template_Parameters').$content), 'NAME_PLACEHOLDER', triggerBody()?['containerGroupName'])"
-                                },
-                                "Upload_Template_Parameters": {
-                                    "runAfter": {
-                                        "Replace_Placeholder_With_Instance_Name": [
-                                            "Succeeded"
-                                        ]
-                                    },
-                                    "type": "ApiConnection",
-                                    "inputs": {
-                                        "body": "@outputs('Replace_Placeholder_With_Instance_Name')",
-                                        "host": {
-                                            "connection": {
-                                                "name": "@parameters('$connections')['azureblob']['connectionId']"
-                                            }
-                                        },
-                                        "method": "put",
-                                        "path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Define_Instance_Parameter_URI')))}"
-                                    }
-                                }
-                            },
-                            "runAfter": {},
-                            "type": "Scope"
-                        }
-                    },
-                    "outputs": {}
-                },
-                "parameters": {
-                    "$connections": {
-                        "value": {
-                            "arm": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureResourceManager.Name'))]",
-                                "connectionName": "arm",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm"
-                            },
-                            "azureblob": {
-                                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureBlob.Name'))]",
-                                "connectionName": "azureblob",
-                                "id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob"
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    ]
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"Application.ResourceGroup.Name": {
+			"type": "String"
+		},
+		"ApiConnections.AzureContainerInstances.Name": {
+			"defaultValue": "aci",
+			"type": "String"
+		},
+		"ApiConnections.AzureResourceManager.Name": {
+			"defaultValue": "arm",
+			"type": "String"
+		},
+		"ApiConnections.AzureBlob.Name": {
+			"defaultValue": "azureblob",
+			"type": "String"
+		},
+		"ApiConnections.AzureEventGrid.Name": {
+			"defaultValue": "azureeventgrid",
+			"type": "String"
+		},
+		"Workflows.Autoscaler.ScaleIn": {
+			"defaultValue": "scalo-autoscaler-scale-in",
+			"type": "String"
+		},
+		"Workflows.Autoscaler.ScaleOut": {
+			"defaultValue": "scalo-autoscaler-scale-out",
+			"type": "String"
+		},
+		"Storage.Name": {
+			"defaultValue": "scaloautoscaler",
+			"type": "String"
+		},
+		"EventGrid.Topic.Name": {
+			"defaultValue": "scalo-events",
+			"type": "String"
+		},
+		"ScaleCriteria.ScaleIn.ActionGroup.Name": {
+			"defaultValue": "Contoso Autoscaler - Scale In Trigger",
+			"type": "String"
+		},
+		"ScaleCriteria.Metric.Namespace": {
+			"type": "String"
+		},
+		"ScaleCriteria.Metric.Name": {
+			"type": "String"
+		},
+		"ScaleCriteria.Metric.Dimension": {
+			"type": "array"
+		},
+		"ScaleCriteria.ScaleIn.Operator": {
+			"type": "String",
+			"allowedValues": ["Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual"]
+		},
+		"ScaleCriteria.ScaleIn.Threshold": {
+			"defaultValue": 100,
+			"type": "int"
+		},
+		"ScaleCriteria.ScaleIn.Aggregation": {
+			"type": "String",
+			"allowedValues": ["Average", "Minimum", "Maximum", "Total"]
+		},
+		"ScaleCriteria.ScaleOut.Operator": {
+			"type": "String",
+			"allowedValues": ["Equals", "NotEquals", "GreaterThan", "GreaterThanOrEqual", "LessThan", "LessThanOrEqual"]
+		},
+		"ScaleCriteria.ScaleOut.Threshold": {
+			"defaultValue": 100,
+			"type": "int"
+		},
+		"ScaleCriteria.ScaleOut.Aggregation": {
+			"type": "String",
+			"allowedValues": ["Average", "Minimum", "Maximum", "Total"]
+		},
+		"ScaleCriteria.ScaleOut.ActionGroup.Name": {
+			"defaultValue": "Contoso Autoscaler - Scale Out Trigger",
+			"type": "String"
+		},
+		"ScaleCriteria.ResourceId": {
+			"defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-orders/providers/Microsoft.ServiceBus/namespaces/scalo-messaging-landscape",
+			"type": "String"
+		},
+		"ScalingDefinition.MaxReplicas": {
+			"defaultValue": 10,
+			"type": "int"
+		},
+		"ScalingDefinition.MinReplicas": {
+			"defaultValue": 0,
+			"type": "int"
+		},
+		"ScaleTriggers.ActionGroup.ScaleIn.Name": {
+			"defaultValue": "Contoso Autoscaler - Scale In Trigger",
+			"type": "String"
+		},
+		"ScaleTriggers.ActionGroup.ScaleIn.ShortName": {
+			"defaultValue": "autoscaleout",
+			"type": "String"
+		},
+		"ScaleTriggers.ActionGroup.ScaleOut.Name": {
+			"defaultValue": "Contoso Autoscaler - Scale Out Trigger",
+			"type": "String"
+		},
+		"ScaleTriggers.ActionGroup.ScaleOut.ShortName": {
+			"defaultValue": "autoscaleout",
+			"type": "String"
+		},
+		"Workflows.ScaleController.ScaleIn": {
+			"defaultValue": "scalo-autoscaler-scale-controller-in",
+			"type": "String"
+		},
+		"Workflows.ScaleController.ScaleOut": {
+			"defaultValue": "scalo-autoscaler-scale-controller-out",
+			"type": "String"
+		},
+		"containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid": {
+			"defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(first(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']).name)}",
+			"type": "String"
+		},
+		"containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid": {
+			"defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerOutputs()['queries']['resourceGroupName'])}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(triggerOutputs()['queries']['containerGroupName'])}",
+			"type": "String"
+		},
+		"deployments___encodeURIComponent__deploy_new_instance___guid_____externalid": {
+			"defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerBody()?['resourceGroupName'])}/providers/Microsoft.Resources/deployments/@{encodeURIComponent('deploy-new-instance-',guid())}",
+			"type": "String"
+		}
+	},
+	"variables": {
+		"ScaleCriteria.Dimension.Default": [],
+		"ScaleCriteria.Metric.Dimension": "[coalesce(parameters('ScaleCriteria.Metric.Dimension'), variables('ScaleCriteria.Dimension.Default'))]"
+	},
+	"resources": [{
+			"type": "Microsoft.EventGrid/topics",
+			"apiVersion": "2020-06-01",
+			"name": "[parameters('EventGrid.Topic.Name')]",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"inputSchema": "EventGridSchema"
+			}
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts",
+			"apiVersion": "2020-08-01-preview",
+			"name": "[parameters('Storage.Name')]",
+			"location": "[resourceGroup().location]",
+			"sku": {
+				"name": "Standard_LRS",
+				"tier": "Standard"
+			},
+			"kind": "StorageV2",
+			"properties": {
+				"accessTier": "Hot"
+			}
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts/blobServices",
+			"apiVersion": "2020-08-01-preview",
+			"name": "[concat(parameters('Storage.Name'), '/default')]",
+			"sku": {
+				"name": "Standard_LRS",
+				"tier": "Standard"
+			},
+			"properties": {
+				"cors": {
+					"corsRules": []
+				},
+				"deleteRetentionPolicy": {
+					"enabled": false
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
+			]
+		},
+		{
+			"type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+			"apiVersion": "2020-08-01-preview",
+			"name": "[concat(parameters('Storage.Name'), '/default/templates')]",
+			"properties": {
+				"publicAccess": "Blob"
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/storageAccounts/blobServices', parameters('Storage.Name'), 'default')]"
+			]
+		},
+		{
+			"type": "Microsoft.Web/connections",
+			"apiVersion": "2016-06-01",
+			"name": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
+			"location": "[resourceGroup().location]",
+			"kind": "V1",
+			"properties": {
+				"displayName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
+				"customParameterValues": {},
+				"api": {
+					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Web/connections",
+			"apiVersion": "2016-06-01",
+			"name": "[parameters('ApiConnections.AzureResourceManager.Name')]",
+			"location": "[resourceGroup().location]",
+			"kind": "V1",
+			"properties": {
+				"displayName": "[parameters('ApiConnections.AzureResourceManager.Name')]",
+				"customParameterValues": {},
+				"api": {
+					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Web/connections",
+			"apiVersion": "2016-06-01",
+			"name": "[parameters('ApiConnections.AzureBlob.Name')]",
+			"location": "[resourceGroup().location]",
+			"kind": "V1",
+			"properties": {
+				"displayName": "[parameters('ApiConnections.AzureBlob.Name')]",
+				"customParameterValues": {},
+				"api": {
+					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob'"
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Web/connections",
+			"apiVersion": "2016-06-01",
+			"name": "[parameters('ApiConnections.AzureEventGrid.Name')]",
+			"location": "[resourceGroup().location]",
+			"kind": "V1",
+			"properties": {
+				"displayName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
+				"customParameterValues": {},
+				"api": {
+					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
+				}
+			}
+		},
+		{
+			"type": "microsoft.insights/metricalerts",
+			"apiVersion": "2018-03-01",
+			"name": "[parameters('ScaleCriteria.ScaleIn.ActionGroup.Name')]",
+			"location": "global",
+			"properties": {
+				"description": "Scaling criteria to trigger a scale in action",
+				"severity": 4,
+				"enabled": true,
+				"scopes": [
+					"[parameters('ScaleCriteria.ResourceId')]"
+				],
+				"evaluationFrequency": "PT1M",
+				"windowSize": "PT5M",
+				"criteria": {
+					"allOf": [{
+						"threshold": "[parameters('ScaleCriteria.ScaleIn.Threshold')]",
+						"name": "Metric1",
+						"metricNamespace": "[parameters('ScaleCriteria.Metric.Namespace')]",
+						"metricName": "[parameters('ScaleCriteria.Metric.Name')]",
+						"dimensions": "[variables('ScaleCriteria.Metric.Dimension')]",
+						"operator": "[parameters('ScaleCriteria.ScaleIn.Operator')]",
+						"timeAggregation": "[parameters('ScaleCriteria.ScaleIn.Aggregation')]",
+						"criterionType": "StaticThresholdCriterion"
+					}],
+					"odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+				},
+				"autoMitigate": false,
+				"actions": [{
+					"actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleIn.Name'))]",
+					"webHookProperties": {}
+				}]
+			},
+			"dependsOn": [
+				"[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleIn.Name'))]"
+			]
+		},
+		{
+			"type": "microsoft.insights/metricalerts",
+			"apiVersion": "2018-03-01",
+			"name": "[parameters('ScaleCriteria.ScaleOut.ActionGroup.Name')]",
+			"location": "global",
+			"properties": {
+				"description": "Scaling criteria to trigger a scale out action",
+				"severity": 4,
+				"enabled": true,
+				"scopes": [
+					"[parameters('ScaleCriteria.ResourceId')]"
+				],
+				"evaluationFrequency": "PT1M",
+				"windowSize": "PT5M",
+				"criteria": {
+					"allOf": [{
+						"threshold": "[parameters('ScaleCriteria.ScaleOut.Threshold')]",
+						"name": "Metric1",
+						"metricNamespace": "[parameters('ScaleCriteria.Metric.Namespace')]",
+						"metricName": "[parameters('ScaleCriteria.Metric.Name')]",
+						"dimensions": "[variables('ScaleCriteria.Metric.Dimension')]",
+						"operator": "[parameters('ScaleCriteria.ScaleOut.Operator')]",
+						"timeAggregation": "[parameters('ScaleCriteria.ScaleOut.Aggregation')]",
+						"criterionType": "StaticThresholdCriterion"
+					}],
+					"odata.type": "Microsoft.Azure.Monitor.SingleResourceMultipleMetricCriteria"
+				},
+				"autoMitigate": false,
+				"actions": [{
+					"actionGroupId": "[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleOut.Name'))]",
+					"webHookProperties": {}
+				}]
+			},
+			"dependsOn": [
+				"[resourceId('microsoft.insights/actionGroups', parameters('ScaleTriggers.ActionGroup.ScaleOut.Name'))]"
+			]
+		},
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "[parameters('Workflows.Autoscaler.ScaleIn')]",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						},
+						"ScalingDefinition.MaxReplicas": {
+							"defaultValue": 10,
+							"type": "Int"
+						},
+						"ScalingDefinition.MinReplicas": {
+							"defaultValue": 0,
+							"type": "Int"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"method": "DELETE"
+							}
+						}
+					},
+					"actions": {
+						"Delete_Instance": {
+							"runAfter": {},
+							"type": "ApiConnection",
+							"inputs": {
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['aci']['connectionId']"
+									}
+								},
+								"method": "delete",
+								"path": "[parameters('containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid')]",
+								"queries": {
+									"x-ms-api-version": "2019-12-01"
+								}
+							}
+						},
+						"Send_Created_Response": {
+							"runAfter": {
+								"Delete_Instance": [
+									"Succeeded"
+								]
+							},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"statusCode": 201
+							}
+						},
+						"Send_Internal_Server_Error_Response": {
+							"runAfter": {
+								"Delete_Instance": [
+									"Failed"
+								]
+							},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"statusCode": 500
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"aci": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
+							}
+						}
+					},
+					"ScalingDefinition.MaxReplicas": {
+						"value": "[parameters('ScalingDefinition.MaxReplicas')]"
+					},
+					"ScalingDefinition.MinReplicas": {
+						"value": "[parameters('ScalingDefinition.MinReplicas')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]"
+			]
+		},
+		{
+			"type": "microsoft.insights/actionGroups",
+			"apiVersion": "2019-03-01",
+			"name": "[parameters('ScaleTriggers.ActionGroup.ScaleIn.Name')]",
+			"location": "Global",
+			"properties": {
+				"groupShortName": "[parameters('ScaleTriggers.ActionGroup.ScaleIn.ShortName')]",
+				"enabled": true,
+				"emailReceivers": [],
+				"smsReceivers": [],
+				"webhookReceivers": [],
+				"itsmReceivers": [],
+				"azureAppPushReceivers": [],
+				"automationRunbookReceivers": [],
+				"voiceReceivers": [],
+				"logicAppReceivers": [{
+					"name": "Scale Controller",
+					"resourceId": "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]",
+					"callbackUrl": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn')), '/triggers/manual'), '2016-06-01').value]",
+					"useCommonAlertSchema": false
+				}],
+				"azureFunctionReceivers": []
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleIn'))]"
+			]
+		},
+		{
+			"type": "microsoft.insights/actionGroups",
+			"apiVersion": "2019-03-01",
+			"name": "[parameters('ScaleTriggers.ActionGroup.ScaleOut.Name')]",
+			"location": "Global",
+			"properties": {
+				"groupShortName": "[parameters('ScaleTriggers.ActionGroup.ScaleOut.ShortName')]",
+				"enabled": true,
+				"emailReceivers": [],
+				"smsReceivers": [],
+				"webhookReceivers": [],
+				"itsmReceivers": [],
+				"azureAppPushReceivers": [],
+				"automationRunbookReceivers": [],
+				"voiceReceivers": [],
+				"logicAppReceivers": [{
+					"name": "Scale Controller",
+					"resourceId": "[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]",
+					"callbackUrl": "[listCallbackURL(concat(resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut')), '/triggers/manual'), '2016-06-01').value]",
+					"useCommonAlertSchema": false
+				}],
+				"azureFunctionReceivers": []
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Logic/workflows', parameters('Workflows.ScaleController.ScaleOut'))]"
+			]
+		},
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "[parameters('Workflows.ScaleController.ScaleIn')]",
+			"location": "[resourceGroup().location]",
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						},
+						"ResourceGroup.Name": {
+							"type": "String"
+						},
+						"ScalingDefinition.MaxReplicas": {
+							"defaultValue": 10,
+							"type": "Int"
+						},
+						"ScalingDefinition.MinReplicas": {
+							"defaultValue": 0,
+							"type": "Int"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"schema": {}
+							}
+						}
+					},
+					"actions": {
+						"Are_There_Instances_To_Scale_Down": {
+							"actions": {
+								"Determine_Instance_To_Delete": {
+									"runAfter": {},
+									"type": "Compose",
+									"inputs": "@first(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']).name"
+								},
+								"Do_We_Need_To_Scale_In": {
+									"actions": {
+										"Delete_Instance": {
+											"runAfter": {},
+											"type": "ApiConnection",
+											"inputs": {
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['aci']['connectionId']"
+													}
+												},
+												"method": "delete",
+												"path": "[parameters('containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid')]",
+												"queries": {
+													"x-ms-api-version": "2019-12-01"
+												}
+											}
+										},
+										"Publish_Event": {
+											"runAfter": {
+												"Trigger_Scaler_To_Delete_Instance": [
+													"Succeeded"
+												]
+											},
+											"type": "ApiConnection",
+											"inputs": {
+												"body": [{
+													"data": {
+														"replicas": {
+															"new": "@sub(length(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']), 1)",
+															"old": "@length(body('Get_a_list_of_container_groups_in_a_resource_group')?['value'])"
+														},
+														"scalingDefinition": {
+															"replicas": {
+																"max": "@parameters('ScalingDefinition.MaxReplicas')",
+																"min": "@parameters('ScalingDefinition.MinReplicas')"
+															}
+														}
+													},
+													"eventType": "Autoscaler.Scale.In",
+													"id": "@{guid()}",
+													"subject": "contoso/orders"
+												}],
+												"host": {
+													"connection": {
+														"name": "@parameters('$connections')['azureeventgridpublish']['connectionId']"
+													}
+												},
+												"method": "post",
+												"path": "/eventGrid/api/events"
+											}
+										},
+										"Terminate": {
+											"runAfter": {
+												"Trigger_Scaler_To_Delete_Instance": [
+													"Failed"
+												]
+											},
+											"type": "Terminate",
+											"inputs": {
+												"runError": {
+													"message": "Unable to delete instance @{outputs('Determine_Instance_To_Delete')}"
+												},
+												"runStatus": "Failed"
+											}
+										},
+										"Trigger_Scaler_To_Delete_Instance": {
+											"runAfter": {
+												"Delete_Instance": [
+													"Succeeded"
+												]
+											},
+											"type": "Http",
+											"inputs": {
+												"method": "DELETE",
+												"uri": "https://prod-94.westeurope.logic.azure.com:443/workflows/c189809474194f57bbb20893e6469b52/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FsRXErLNanaEwplbXrf9FE71iBSW7amRoYaXb3MYnWo&resourceGroupName=@{parameters('ResourceGroup.Name')}&containerGroupName=@{outputs('Determine_Instance_To_Delete')}"
+											}
+										}
+									},
+									"runAfter": {
+										"Determine_Instance_To_Delete": [
+											"Succeeded"
+										]
+									},
+									"else": {
+										"actions": {
+											"No_Action_Required": {
+												"runAfter": {},
+												"type": "Terminate",
+												"inputs": {
+													"runStatus": "Succeeded"
+												}
+											}
+										}
+									},
+									"expression": {
+										"and": [{
+											"greater": [
+												"@outputs('Determine_Current_Replica_Count')",
+												"@parameters('ScalingDefinition.MinReplicas')"
+											]
+										}]
+									},
+									"type": "If"
+								}
+							},
+							"runAfter": {
+								"Determine_Current_Replica_Count": [
+									"Succeeded"
+								]
+							},
+							"else": {
+								"actions": {
+									"Nothing_To_Scale_In": {
+										"runAfter": {},
+										"type": "Terminate",
+										"inputs": {
+											"runStatus": "Succeeded"
+										}
+									}
+								}
+							},
+							"expression": {
+								"and": [{
+									"greater": [
+										"@outputs('Determine_Current_Replica_Count')",
+										0
+									]
+								}]
+							},
+							"type": "If"
+						},
+						"Determine_Current_Replica_Count": {
+							"runAfter": {
+								"Get_a_list_of_container_groups_in_a_resource_group": [
+									"Succeeded"
+								]
+							},
+							"type": "Compose",
+							"inputs": "@length(body('Get_a_list_of_container_groups_in_a_resource_group')?['value'])"
+						},
+						"Get_a_list_of_container_groups_in_a_resource_group": {
+							"runAfter": {},
+							"type": "ApiConnection",
+							"inputs": {
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['aci']['connectionId']"
+									}
+								},
+								"method": "get",
+								"path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups",
+								"queries": {
+									"x-ms-api-version": "2019-12-01"
+								}
+							}
+						},
+						"Send_acknowledge": {
+							"runAfter": {},
+							"type": "Response",
+							"kind": "Http",
+							"inputs": {
+								"statusCode": 202
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"aci": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
+							},
+							"azureeventgridpublish": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
+							}
+						}
+					},
+					"ScalingDefinition.MaxReplicas": {
+						"value": "[parameters('ScalingDefinition.MaxReplicas')]"
+					},
+					"ScalingDefinition.MinReplicas": {
+						"value": "[parameters('ScalingDefinition.MinReplicas')]"
+					},
+					"ResourceGroup.Name": {
+						"value": "[parameters('Application.ResourceGroup.Name')]"
+					}
+				}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
+			]
+		},
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "[parameters('Workflows.ScaleController.ScaleOut')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
+			],
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						},
+						"Resource.Prefix": {
+							"defaultValue": "scalo-orders-worker-",
+							"type": "String"
+						},
+						"ResourceGroup.Name": {
+							"defaultValue": "scalo-orders",
+							"type": "String"
+						},
+						"ScalingDefinition.MaxReplicas": {
+							"defaultValue": 10,
+							"type": "Int"
+						},
+						"ScalingDefinition.MinReplicas": {
+							"defaultValue": 0,
+							"type": "Int"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"schema": {}
+							}
+						}
+					},
+					"actions": {
+						"Determine_Current_Replica_Count": {
+							"runAfter": {
+								"Get_All_Current_Instances": [
+									"Succeeded"
+								]
+							},
+							"type": "Compose",
+							"inputs": "@length(body('Get_All_Current_Instances')?['value'])"
+						},
+						"Do_We_Need_To_Scale_Out": {
+							"actions": {
+								"Publish_Scale_Out_Event": {
+									"runAfter": {
+										"Trigger_Scaler_To_Add_Instance": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": [{
+											"data": {
+												"replicas": {
+													"new": "@add(outputs('Determine_Current_Replica_Count'), 1)",
+													"old": "@outputs('Determine_Current_Replica_Count')"
+												},
+												"scalingDefinition": {
+													"replicas": {
+														"max": "@parameters('ScalingDefinition.MaxReplicas')",
+														"min": "@parameters('ScalingDefinition.MinReplicas')"
+													}
+												}
+											},
+											"eventType": "Autoscaler.Scale.Out",
+											"id": "@guid()",
+											"subject": "contoso/orders"
+										}],
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['azureeventgridpublish_1']['connectionId']"
+											}
+										},
+										"method": "post",
+										"path": "/eventGrid/api/events"
+									}
+								},
+								"Send_Internal_Server_Error": {
+									"runAfter": {
+										"Trigger_Scaler_To_Add_Instance": [
+											"Failed",
+											"TimedOut"
+										]
+									},
+									"type": "Response",
+									"kind": "Http",
+									"inputs": {
+										"body": "Unable to add new instance",
+										"statusCode": 500
+									}
+								},
+								"Send_OK": {
+									"runAfter": {
+										"Publish_Scale_Out_Event": [
+											"Succeeded"
+										]
+									},
+									"type": "Response",
+									"kind": "Http",
+									"inputs": {
+										"statusCode": 200
+									}
+								},
+								"Terminate": {
+									"runAfter": {
+										"Send_Internal_Server_Error": [
+											"Succeeded"
+										]
+									},
+									"type": "Terminate",
+									"inputs": {
+										"runError": {
+											"message": "Unable to add new instance"
+										},
+										"runStatus": "Failed"
+									}
+								},
+								"Trigger_Scaler_To_Add_Instance": {
+									"runAfter": {},
+									"type": "Http",
+									"inputs": {
+										"body": {
+											"containerGroupName": "@{parameters('Resource.Prefix')}@{guid()}",
+											"resourceGroupName": "@{parameters('ResourceGroup.Name')}"
+										},
+										"method": "POST",
+										"uri": "https://prod-120.westeurope.logic.azure.com:443/workflows/6349d631cf1e4181a4a37bda3012c840/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=gZbVzTDhxCRT264TuUPPnws7UNOO15aRFfqJqhlrI7U"
+									}
+								}
+							},
+							"runAfter": {
+								"Determine_Current_Replica_Count": [
+									"Succeeded"
+								]
+							},
+							"else": {
+								"actions": {
+									"No_Action_Required": {
+										"runAfter": {},
+										"type": "Terminate",
+										"inputs": {
+											"runStatus": "Succeeded"
+										}
+									},
+									"Send_Response": {
+										"runAfter": {
+											"No_Action_Required": [
+												"Succeeded"
+											]
+										},
+										"type": "Response",
+										"kind": "Http",
+										"inputs": {
+											"statusCode": 200
+										}
+									}
+								}
+							},
+							"expression": {
+								"and": [{
+									"less": [
+										"@outputs('Determine_Current_Replica_Count')",
+										"@parameters('ScalingDefinition.MaxReplicas')"
+									]
+								}]
+							},
+							"type": "If"
+						},
+						"Get_All_Current_Instances": {
+							"runAfter": {},
+							"type": "ApiConnection",
+							"inputs": {
+								"host": {
+									"connection": {
+										"name": "@parameters('$connections')['aci']['connectionId']"
+									}
+								},
+								"method": "get",
+								"path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent('scalo-orders')}/providers/Microsoft.ContainerInstance/containerGroups",
+								"queries": {
+									"x-ms-api-version": "2019-12-01"
+								}
+							}
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"aci": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
+							},
+							"azureeventgridpublish_1": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
+							}
+						}
+					}
+				}
+			}
+		},
+		{
+			"type": "Microsoft.Logic/workflows",
+			"apiVersion": "2017-07-01",
+			"name": "[parameters('Workflows.Autoscaler.ScaleOut')]",
+			"location": "[resourceGroup().location]",
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/StorageAccounts', parameters('Storage.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureResourceManager.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureBlob.Name'))]"
+			],
+			"properties": {
+				"state": "Enabled",
+				"definition": {
+					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+					"contentVersion": "1.0.0.0",
+					"parameters": {
+						"$connections": {
+							"defaultValue": {},
+							"type": "Object"
+						},
+						"Deployment.Parameter.FileName": {
+							"defaultValue": "worker.parameters.json",
+							"type": "String"
+						},
+						"Deployment.Template.FileName": {
+							"defaultValue": "worker.json",
+							"type": "String"
+						},
+						"ScalingDefinition.MaxReplicas": {
+							"defaultValue": 10,
+							"type": "Int"
+						},
+						"ScalingDefinition.MinReplicas": {
+							"defaultValue": 0,
+							"type": "Int"
+						}
+					},
+					"triggers": {
+						"manual": {
+							"type": "Request",
+							"kind": "Http",
+							"inputs": {
+								"method": "POST",
+								"schema": {
+									"properties": {
+										"containerGroupName": {
+											"type": "string"
+										},
+										"resourceGroupName": {
+											"type": "string"
+										}
+									},
+									"type": "object"
+								}
+							}
+						}
+					},
+					"actions": {
+						"Add_A_New_Instance": {
+							"actions": {
+								"Copy_Parameter_Templates": {
+									"runAfter": {
+										"Define_Instance_Parameter_URI": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['azureblob']['connectionId']"
+											}
+										},
+										"method": "post",
+										"path": "/datasets/default/copyFile",
+										"queries": {
+											"destination": "@{outputs('Define_Instance_Parameter_URI')}",
+											"overwrite": false,
+											"queryParametersSingleEncoded": true,
+											"source": "/templates/@{parameters('Deployment.Parameter.FileName')}"
+										}
+									}
+								},
+								"Define_Instance_Parameter_URI": {
+									"runAfter": {},
+									"type": "Compose",
+									"inputs": "/templates/instances/@{triggerBody()?['containerGroupName']}.parameters.json"
+								},
+								"Delete_Template_Parameters_Blob": {
+									"runAfter": {
+										"Deploy_A_New_Instance": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['azureblob']['connectionId']"
+											}
+										},
+										"method": "delete",
+										"path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Define_Instance_Parameter_URI')))}"
+									}
+								},
+								"Deploy_A_New_Instance": {
+									"runAfter": {
+										"Upload_Template_Parameters": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": {
+											"properties": {
+												"mode": "Incremental",
+												"parametersLink": {
+													"uri": "https://contosoordersautoscaler.blob.core.windows.net@{outputs('Define_Instance_Parameter_URI')}"
+												},
+												"templateLink": {
+													"uri": "[concat('https://', parameters('Storage.Name'), '.blob.core.windows.net/templates/@{parameters(''Deployment.Template.FileName'')}')]"
+												}
+											}
+										},
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['arm']['connectionId']"
+											}
+										},
+										"method": "put",
+										"path": "[parameters('deployments___encodeURIComponent__deploy_new_instance___guid_____externalid')]",
+										"queries": {
+											"wait": true,
+											"x-ms-api-version": "2016-06-01"
+										}
+									}
+								},
+								"Get_Raw_Template_Parameters": {
+									"runAfter": {
+										"Copy_Parameter_Templates": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['azureblob']['connectionId']"
+											}
+										},
+										"method": "get",
+										"path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Define_Instance_Parameter_URI')))}/content",
+										"queries": {
+											"inferContentType": true
+										}
+									}
+								},
+								"Replace_Placeholder_With_Instance_Name": {
+									"runAfter": {
+										"Get_Raw_Template_Parameters": [
+											"Succeeded"
+										]
+									},
+									"type": "Compose",
+									"inputs": "@replace(base64ToString(body('Get_Raw_Template_Parameters').$content), 'NAME_PLACEHOLDER', triggerBody()?['containerGroupName'])"
+								},
+								"Upload_Template_Parameters": {
+									"runAfter": {
+										"Replace_Placeholder_With_Instance_Name": [
+											"Succeeded"
+										]
+									},
+									"type": "ApiConnection",
+									"inputs": {
+										"body": "@outputs('Replace_Placeholder_With_Instance_Name')",
+										"host": {
+											"connection": {
+												"name": "@parameters('$connections')['azureblob']['connectionId']"
+											}
+										},
+										"method": "put",
+										"path": "/datasets/default/files/@{encodeURIComponent(encodeURIComponent(outputs('Define_Instance_Parameter_URI')))}"
+									}
+								}
+							},
+							"runAfter": {},
+							"type": "Scope"
+						}
+					},
+					"outputs": {}
+				},
+				"parameters": {
+					"$connections": {
+						"value": {
+							"arm": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureResourceManager.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureResourceManager.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm"
+							},
+							"azureblob": {
+								"connectionId": "[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureBlob.Name'))]",
+								"connectionName": "[parameters('ApiConnections.AzureBlob.Name')]",
+								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob"
+							}
+						}
+					}
+				}
+			}
+		}
+	]
 }
