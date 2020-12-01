@@ -223,7 +223,7 @@
 				"displayName": "[parameters('ApiConnections.AzureBlob.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob'"
+					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob"
 				}
 			}
 		},
@@ -935,11 +935,6 @@
 			"apiVersion": "2017-07-01",
 			"name": "[parameters('Workflows.Autoscaler.ScaleOut')]",
 			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"[resourceId('Microsoft.Storage/StorageAccounts', parameters('Storage.Name'))]",
-				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureResourceManager.Name'))]",
-				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureBlob.Name'))]"
-			],
 			"properties": {
 				"state": "Enabled",
 				"definition": {
@@ -1137,7 +1132,12 @@
 						}
 					}
 				}
-			}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/StorageAccounts', parameters('Storage.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureResourceManager.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureBlob.Name'))]"
+			]
 		}
 	]
 }
