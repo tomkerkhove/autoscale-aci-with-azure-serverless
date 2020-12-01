@@ -2,8 +2,21 @@
 	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
 	"contentVersion": "1.0.0.0",
 	"parameters": {
+		"Application.Deployment.Parameter.FileName": {
+			"type": "String",
+			"defaultValue": "worker.parameters.json"
+		},
+		"Application.Deployment.Template.FileName": {
+			"type": "String",
+			"defaultValue": "worker.json"
+		},
+		"Application.Resource.Prefix": {
+			"type": "String",
+			"defaultValue": "scalo-instance-"
+		},
 		"Application.ResourceGroup.Name": {
-			"type": "String"
+			"type": "String",
+			"defaultValue": "scalo-app"
 		},
 		"ApiConnections.AzureContainerInstances.Name": {
 			"defaultValue": "aci",
@@ -321,7 +334,6 @@
 			"name": "[parameters('Workflows.Autoscaler.ScaleIn')]",
 			"location": "[resourceGroup().location]",
 			"properties": {
-				"state": "Enabled",
 				"definition": {
 					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
 					"contentVersion": "1.0.0.0",
@@ -474,7 +486,6 @@
 			"name": "[parameters('Workflows.ScaleController.ScaleIn')]",
 			"location": "[resourceGroup().location]",
 			"properties": {
-				"state": "Enabled",
 				"definition": {
 					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
 					"contentVersion": "1.0.0.0",
@@ -716,12 +727,7 @@
 			"apiVersion": "2017-07-01",
 			"name": "[parameters('Workflows.ScaleController.ScaleOut')]",
 			"location": "[resourceGroup().location]",
-			"dependsOn": [
-				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
-			],
 			"properties": {
-				"state": "Enabled",
 				"definition": {
 					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
 					"contentVersion": "1.0.0.0",
@@ -731,11 +737,11 @@
 							"type": "Object"
 						},
 						"Resource.Prefix": {
-							"defaultValue": "scalo-orders-worker-",
+							"defaultValue": "",
 							"type": "String"
 						},
 						"ResourceGroup.Name": {
-							"defaultValue": "scalo-orders",
+							"defaultValue": "",
 							"type": "String"
 						},
 						"ScalingDefinition.MaxReplicas": {
@@ -926,9 +932,25 @@
 								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
 							}
 						}
+					},
+					"ScalingDefinition.MaxReplicas": {
+						"value": "[parameters('ScalingDefinition.MaxReplicas')]"
+					},
+					"ScalingDefinition.MinReplicas": {
+						"value": "[parameters('ScalingDefinition.MinReplicas')]"
+					},
+					"ResourceGroup.Name": {
+						"value": "[parameters('Application.ResourceGroup.Name')]"
+					},
+					"Resource.Prefix": {
+						"value": "[parameters('Application.Resource.Prefix')]"
 					}
 				}
-			}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
+			]
 		},
 		{
 			"type": "Microsoft.Logic/workflows",
@@ -936,7 +958,6 @@
 			"name": "[parameters('Workflows.Autoscaler.ScaleOut')]",
 			"location": "[resourceGroup().location]",
 			"properties": {
-				"state": "Enabled",
 				"definition": {
 					"$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
 					"contentVersion": "1.0.0.0",
@@ -946,11 +967,11 @@
 							"type": "Object"
 						},
 						"Deployment.Parameter.FileName": {
-							"defaultValue": "worker.parameters.json",
+							"defaultValue": "",
 							"type": "String"
 						},
 						"Deployment.Template.FileName": {
-							"defaultValue": "worker.json",
+							"defaultValue": "",
 							"type": "String"
 						},
 						"ScalingDefinition.MaxReplicas": {
@@ -1130,6 +1151,18 @@
 								"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob"
 							}
 						}
+					},
+					"Deployment.Parameter.FileName": {
+						"value": "[parameters('Application.Deployment.Parameter.FileName')]"
+					},
+					"Deployment.Template.FileName": {
+						"value": "[parameters('Application.Deployment.Template.FileName')]"
+					},
+					"ScalingDefinition.MaxReplicas": {
+						"value": "[parameters('ScalingDefinition.MaxReplicas')]"
+					},
+					"ScalingDefinition.MinReplicas": {
+						"value": "[parameters('ScalingDefinition.MinReplicas')]"
 					}
 				}
 			},
