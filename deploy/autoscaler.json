@@ -18,6 +18,10 @@
 			"type": "String",
 			"defaultValue": "scalo-app"
 		},
+		"Application.Subscription.Id": {
+			"type": "String",
+			"defaultValue": "[subscription().id]"
+		},
 		"ApiConnections.AzureContainerInstances.Name": {
 			"defaultValue": "aci",
 			"type": "String"
@@ -92,7 +96,7 @@
 			"type": "String"
 		},
 		"ScaleCriteria.ResourceId": {
-			"defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-orders/providers/Microsoft.ServiceBus/namespaces/scalo-messaging-landscape",
+			"defaultValue": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-app/providers/Microsoft.ServiceBus/namespaces/scalo-messaging",
 			"type": "String"
 		},
 		"ScalingDefinition.MaxReplicas": {
@@ -909,7 +913,7 @@
 									}
 								},
 								"method": "get",
-								"path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent('scalo-orders')}/providers/Microsoft.ContainerInstance/containerGroups",
+                    			"path": "/subscriptions/@{encodeURIComponent(parameters('Subscription.Id'))}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups",
 								"queries": {
 									"x-ms-api-version": "2019-12-01"
 								}
@@ -944,6 +948,9 @@
 					},
 					"Resource.Prefix": {
 						"value": "[parameters('Application.Resource.Prefix')]"
+					},
+					"Subscription.Id": {
+						"defaultValue": "[parameters('Application.Subscription.Id')]"
 					}
 				}
 			},
