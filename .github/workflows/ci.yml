@@ -1,0 +1,29 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+    
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+      - name: Show Azure account
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az account show
+    
+      - name: Validate Autoscaler ARM template
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group validate --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --template-file .\deploy\autoscaler.json --parameters .\deploy\autoscaler.parameters.json
