@@ -1,0 +1,27 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ScaleCriteria.Metric.Namespace": {
+            "value": "Microsoft.ServiceBus/namespaces"
+        },
+        "ScaleCriteria.Metric.Name": {
+            "value": "ActiveMessages"
+        },
+        "ScaleCriteria.Metric.Dimension": {
+            "value": [{"name":"EntityName","operator":"Include","values":["orders"]}]
+        },
+        "ScaleCriteria.ScaleIn.Operator": {
+            "value": "LessThanOrEqual"
+        },
+        "ScaleCriteria.ScaleIn.Aggregation": {
+            "value": "Average"
+        },
+        "ScaleCriteria.ScaleOut.Operator": {
+            "value": "GreaterThanOrEqual"
+        },
+        "ScaleCriteria.ScaleOut.Aggregation": {
+            "value": "Average"
+        }
+    }
+}

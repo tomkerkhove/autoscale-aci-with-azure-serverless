@@ -1,72 +1,107 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "Application.Deployment.Parameter.FileName": {
+            "value": "worker.parameters.json"
+        },
+        "Application.Deployment.Template.FileName": {
+            "value": "worker.json"
+        },
+        "Application.Resource.Prefix": {
+            "value": "scalo-instance-"
+        },
+        "Application.ResourceGroup.Name": {
+            "value": "scalo-app"
+        },
+        "Application.Subscription.Id": {
+            "value": "" // TODO: Fill in parameter value
+        },
         "ApiConnections.AzureContainerInstances.Name": {
-            "value": null
+            "value": "aci"
         },
         "ApiConnections.AzureResourceManager.Name": {
-            "value": null
+            "value": "arm"
         },
         "ApiConnections.AzureBlob.Name": {
-            "value": null
-        },
-        "topics_contoso_events_name": {
-            "value": null
-        },
-        "connections_azureeventgridpublish_name": {
-            "value": null
+            "value": "azureblob"
         },
         "ApiConnections.AzureEventGrid.Name": {
-            "value": null
+            "value": "azureeventgrid"
         },
         "Workflows.Autoscaler.ScaleIn": {
-            "value": null
-        },
-        "workflows_contoso_alerts_notifications_name": {
-            "value": null
+            "value": "scalo-autoscaler-scale-in"
         },
         "Workflows.Autoscaler.ScaleOut": {
-            "value": null
+            "value": "scalo-autoscaler-scale-out"
         },
         "Storage.Name": {
-            "value": null
-        },
-        "workflows_contoso_autoscaler_notifications_name": {
-            "value": null
+            "value": "scaloautoscaler"
         },
         "EventGrid.Topic.Name": {
-            "value": null
+            "value": "scalo-events"
+        },
+        "ScaleCriteria.ScaleIn.ActionGroup.Name": {
+            "value": "Contoso Autoscaler - Scale In Trigger"
+        },
+        "ScaleCriteria.Metric.Namespace": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.Metric.Name": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.Metric.Dimension": {
+            "value": [
+                // TODO: Fill in parameter value
+            ]
+        },
+        "ScaleCriteria.ScaleIn.Operator": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleIn.Threshold": {
+            "value": 100
+        },
+        "ScaleCriteria.ScaleIn.Aggregation": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleOut.Operator": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleOut.Threshold": {
+            "value": 100
+        },
+        "ScaleCriteria.ScaleOut.Aggregation": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleOut.ActionGroup.Name": {
+            "value": "Contoso Autoscaler - Scale Out Trigger"
+        },
+        "ScaleCriteria.ResourceId": {
+            "value": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-app/providers/Microsoft.ServiceBus/namespaces/scalo-messaging"
+        },
+        "ScalingDefinition.MaxReplicas": {
+            "value": 10
+        },
+        "ScalingDefinition.MinReplicas": {
+            "value": 0
+        },
+        "ScaleTriggers.ActionGroup.ScaleIn.Name": {
+            "value": "Contoso Autoscaler - Scale In Trigger"
+        },
+        "ScaleTriggers.ActionGroup.ScaleIn.ShortName": {
+            "value": "autoscaleout"
+        },
+        "ScaleTriggers.ActionGroup.ScaleOut.Name": {
+            "value": "Contoso Autoscaler - Scale Out Trigger"
+        },
+        "ScaleTriggers.ActionGroup.ScaleOut.ShortName": {
+            "value": "autoscaleout"
         },
         "Workflows.ScaleController.ScaleIn": {
-            "value": null
+            "value": "scalo-autoscaler-scale-controller-in"
         },
         "Workflows.ScaleController.ScaleOut": {
-            "value": null
-        },
-        "actionGroups_Contoso_Autoscaler___Scale_In_Trigger_name": {
-            "value": null
-        },
-        "metricalerts_Contoso_Autoscaler___Scale_In_Trigger_name": {
-            "value": null
-        },
-        "actionGroups_Contoso_Autoscaler___Scale_Out_Trigger_name": {
-            "value": null
-        },
-        "metricalerts_Contoso_Autoscaler___Scale_Out_Trigger_name": {
-            "value": null
-        },
-        "namespaces_contoso_messaging_landscape_externalid": {
-            "value": null
-        },
-        "containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid": {
-            "value": null
-        },
-        "containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid": {
-            "value": null
-        },
-        "deployments___encodeURIComponent__deploy_new_instance___guid_____externalid": {
-            "value": null
+            "value": "scalo-autoscaler-scale-controller-out"
         }
     }
 }

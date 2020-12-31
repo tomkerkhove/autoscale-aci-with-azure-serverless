@@ -27,4 +27,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az deployment group validate --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --template-file ./deploy/autoscaler.json --parameters ./deploy/autoscaler.parameters.json
+            az deployment group validate --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --template-file ./deploy/autoscaler.json --parameters ./deploy/autoscaler.parameters.ci.json

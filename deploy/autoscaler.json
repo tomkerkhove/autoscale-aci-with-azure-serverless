@@ -130,18 +130,6 @@
 		"Workflows.ScaleController.ScaleOut": {
 			"defaultValue": "scalo-autoscaler-scale-controller-out",
 			"type": "String"
-		},
-		"containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid": {
-			"defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(first(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']).name)}",
-			"type": "String"
-		},
-		"containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid": {
-			"defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerOutputs()['queries']['resourceGroupName'])}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(triggerOutputs()['queries']['containerGroupName'])}",
-			"type": "String"
-		},
-		"deployments___encodeURIComponent__deploy_new_instance___guid_____externalid": {
-			"defaultValue": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerBody()?['resourceGroupName'])}/providers/Microsoft.Resources/deployments/@{encodeURIComponent('deploy-new-instance-',guid())}",
-			"type": "String"
 		}
 	},
 	"variables": {
@@ -375,7 +363,7 @@
 									}
 								},
 								"method": "delete",
-								"path": "[parameters('containerGroups___encodeURIComponent_triggerOutputs____queries____containerGroupName_____externalid')]",
+								"path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerOutputs()['queries']['resourceGroupName'])}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(triggerOutputs()['queries']['containerGroupName'])}",
 								"queries": {
 									"x-ms-api-version": "2019-12-01"
 								}
@@ -539,7 +527,7 @@
 													}
 												},
 												"method": "delete",
-												"path": "[parameters('containerGroups___encodeURIComponent_first_body__Get_a_list_of_container_groups_in_a_resource_group_____value____name___externalid')]",
+												"path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(parameters('ResourceGroup.Name'))}/providers/Microsoft.ContainerInstance/containerGroups/@{encodeURIComponent(first(body('Get_a_list_of_container_groups_in_a_resource_group')?['value']).name)}",
 												"queries": {
 													"x-ms-api-version": "2019-12-01"
 												}
@@ -1087,7 +1075,7 @@
 											}
 										},
 										"method": "put",
-										"path": "[parameters('deployments___encodeURIComponent__deploy_new_instance___guid_____externalid')]",
+										"path": "/subscriptions/@{encodeURIComponent('0f9d7fea-99e8-4768-8672-06a28514f77e')}/resourceGroups/@{encodeURIComponent(triggerBody()?['resourceGroupName'])}/providers/Microsoft.Resources/deployments/@{encodeURIComponent('deploy-new-instance-',guid())}",
 										"queries": {
 											"wait": true,
 											"x-ms-api-version": "2016-06-01"
