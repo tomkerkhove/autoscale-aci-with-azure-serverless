@@ -748,6 +748,10 @@
 							"defaultValue": "",
 							"type": "String"
 						},
+						"Subscription.Id": {
+							"defaultValue": "",
+							"type": "String"
+						},
 						"ScalingDefinition.MaxReplicas": {
 							"defaultValue": 10,
 							"type": "Int"
@@ -950,7 +954,7 @@
 						"value": "[parameters('Application.Resource.Prefix')]"
 					},
 					"Subscription.Id": {
-						"defaultValue": "[parameters('Application.Subscription.Id')]"
+						"value": "[parameters('Application.Subscription.Id')]"
 					}
 				}
 			},
@@ -1070,7 +1074,7 @@
 											"properties": {
 												"mode": "Incremental",
 												"parametersLink": {
-													"uri": "https://contosoordersautoscaler.blob.core.windows.net@{outputs('Define_Instance_Parameter_URI')}"
+													"uri": "[concat('https://', parameters('Storage.Name'), '.blob.core.windows.net@{outputs(''Define_Instance_Parameter_URI'')}')]"
 												},
 												"templateLink": {
 													"uri": "[concat('https://', parameters('Storage.Name'), '.blob.core.windows.net/templates/@{parameters(''Deployment.Template.FileName'')}')]"
