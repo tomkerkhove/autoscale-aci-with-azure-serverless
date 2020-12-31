@@ -200,7 +200,7 @@
 				"displayName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/aci"
+					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/aci')]"
 				}
 			}
 		},
@@ -214,7 +214,7 @@
 				"displayName": "[parameters('ApiConnections.AzureResourceManager.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/arm"
+					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/arm')]"
 				}
 			}
 		},
@@ -228,9 +228,16 @@
 				"displayName": "[parameters('ApiConnections.AzureBlob.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureblob"
+					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/azureblob')]"
+				},
+				"parameterValues": {
+					"accountName": "[parameters('Storage.Name')]",
+					"accessKey": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name')), '2019-04-01').keys[0].value]"
 				}
-			}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.Storage/storageAccounts', parameters('Storage.Name'))]"
+			]
 		},
 		{
 			"type": "Microsoft.Web/connections",
@@ -242,9 +249,16 @@
 				"displayName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/providers/Microsoft.Web/locations/westeurope/managedApis/azureeventgridpublish"
+					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/azureeventgridpublish')]"
+				},
+				"parameterValues": {
+					"topicEndpoint": "[parameters('EventGrid.Topic.Name')]",
+					"sharedAccessSignature": "[listkeys(resourceId('Microsoft.EventGrid/topics', parameters('EventGrid.Topic.Name')), '2017-06-15-preview').key1]"
 				}
-			}
+			},
+			"dependsOn": [
+				"[resourceId('Microsoft.EventGrid/topics', parameters('EventGrid.Topic.Name'))]"
+			]
 		},
 		{
 			"type": "microsoft.insights/metricalerts",
