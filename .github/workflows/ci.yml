@@ -5,8 +5,8 @@ on:
     branches: [ main ]
 
 jobs:
-  verify:
-    name: CI
+  verify_infra:
+    name: Validate Infrastructure Template
     runs-on: ubuntu-latest
 
     steps:
@@ -23,8 +23,31 @@ jobs:
           inlineScript: |
             az account show
     
-      - name: Validate Autoscaler ARM template
+      - name: Validate Autoscaler Infrastructure ARM template
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az deployment group validate --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --template-file ./deploy/autoscaler.json --parameters ./deploy/autoscaler.parameters.ci.json
+            az deployment group validate --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --template-file ./deploy/autoscaler/autoscaler-infrastructure.json --parameters ./deploy/autoscaler/autoscaler-infrastructure.parameters.ci.json
+  verify_runtime:
+    name: Validate Runtime Template
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+    
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+    
+      - name: Show Azure account
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az account show
+    
+      - name: Validate Autoscaler Runtime ARM template
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az deployment group validate --subscription ${{ secrets.AZURE_SUBSCRIPTION }} --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} --template-file ./deploy/autoscaler/autoscaler-runtime.json --parameters ./deploy/autoscaler/autoscaler-runtime.parameters.ci.json
