@@ -21,4 +21,11 @@ Our goal was to fully rely on Azure Monitor as a scaling trigger but it only sen
 
 ## How do I deploy it?
 
-This is actively being exported into ARM templates, sit back and wait!
+You can easily deploy the POC:
+
+1. Create a workload ARM template that will be used to spin up new instances. The parameters file should have `NAME_PLACEHOLDER` as value for the container group name which will be replaced at runtime.
+2. Deploy our autoscaler infrastructure ARM template (`deploy/autoscaler/autoscaler-infrastructure.json`)
+3. Upload your workload ARM template & parameters file to the `templates` blob container of the created storage account
+4. Deploy our autoscaler runtime ARM template (`deploy/autoscaler/autoscaler-infrastructure.json`)
+5. Authenticate the Azure Container Instance & ARM API connection that was created
+6. Scale!
