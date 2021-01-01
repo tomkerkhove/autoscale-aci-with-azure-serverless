@@ -136,7 +136,8 @@
 		"ScaleCriteria.Dimension.Default": [],
 		"ScaleCriteria.Metric.Dimension": "[coalesce(parameters('ScaleCriteria.Metric.Dimension'), variables('ScaleCriteria.Dimension.Default'))]"
 	},
-	"resources": [{
+	"resources": [
+		{
 			"type": "Microsoft.EventGrid/topics",
 			"apiVersion": "2020-06-01",
 			"name": "[parameters('EventGrid.Topic.Name')]",
@@ -457,6 +458,10 @@
 						"ResourceGroup.Name": {
 							"type": "String"
 						},
+						"Workflow.ScaleIn.TriggerUrl": {
+							"defaultValue": "",
+							"type": "String"
+						},
 						"ScalingDefinition.MaxReplicas": {
 							"defaultValue": 10,
 							"type": "Int"
@@ -558,7 +563,7 @@
 											"type": "Http",
 											"inputs": {
 												"method": "DELETE",
-												"uri": "https://prod-94.westeurope.logic.azure.com:443/workflows/c189809474194f57bbb20893e6469b52/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=FsRXErLNanaEwplbXrf9FE71iBSW7amRoYaXb3MYnWo&resourceGroupName=@{parameters('ResourceGroup.Name')}&containerGroupName=@{outputs('Determine_Instance_To_Delete')}"
+												"uri": "@{parameters('Workflow.ScaleIn.TriggerUrl')}&resourceGroupName=@{parameters('ResourceGroup.Name')}&containerGroupName=@{outputs('Determine_Instance_To_Delete')}"
 											}
 										}
 									},
@@ -674,12 +679,16 @@
 					},
 					"ResourceGroup.Name": {
 						"value": "[parameters('Application.ResourceGroup.Name')]"
+					},
+					"Workflow.ScaleIn.TriggerUrl": {
+						"value": "[listCallbackUrl(resourceId('Microsoft.Logic/workflows', parameters('Workflows.Autoscaler.ScaleIn'), 'manual'), '2016-06-01').value]"
 					}
 				}
 			},
 			"dependsOn": [
 				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
+				"[resourceId('Microsoft.Logic/workflows', parameters('Workflows.Autoscaler.ScaleIn'))]"
 			]
 		},
 		{
@@ -705,6 +714,10 @@
 							"type": "String"
 						},
 						"Subscription.Id": {
+							"defaultValue": "",
+							"type": "String"
+						},
+						"Workflow.ScaleOut.TriggerUrl": {
 							"defaultValue": "",
 							"type": "String"
 						},
@@ -821,7 +834,7 @@
 											"resourceGroupName": "@{parameters('ResourceGroup.Name')}"
 										},
 										"method": "POST",
-										"uri": "https://prod-120.westeurope.logic.azure.com:443/workflows/6349d631cf1e4181a4a37bda3012c840/triggers/manual/paths/invoke?api-version=2016-10-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=gZbVzTDhxCRT264TuUPPnws7UNOO15aRFfqJqhlrI7U"
+			                            "uri": "@parameters('Workflow.ScaleOut.TriggerUrl')"
 									}
 								}
 							},
@@ -911,12 +924,16 @@
 					},
 					"Subscription.Id": {
 						"value": "[parameters('Application.Subscription.Id')]"
+					},
+					"Workflow.ScaleOut.TriggerUrl": {
+						"value": "[listCallbackUrl(resourceId('Microsoft.Logic/workflows', parameters('Workflows.Autoscaler.ScaleOut'), 'manual'), '2016-06-01').value]"
 					}
 				}
 			},
 			"dependsOn": [
 				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureContainerInstances.Name'))]",
-				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]"
+				"[resourceId('Microsoft.Web/connections', parameters('ApiConnections.AzureEventGrid.Name'))]",
+				"[resourceId('Microsoft.Logic/workflows', parameters('Workflows.Autoscaler.ScaleOut'))]"
 			]
 		},
 		{
