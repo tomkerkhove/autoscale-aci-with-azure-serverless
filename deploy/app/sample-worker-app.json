@@ -1,0 +1,56 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "ContainerGroup.Name": {
+            "type": "String"
+        },
+        "ServiceBus.ConnectionString": {
+            "type": "securestring"
+        }
+    },
+    "variables": {},
+    "resources": [
+        {
+            "type": "Microsoft.ContainerInstance/containerGroups",
+            "apiVersion": "2019-12-01",
+            "name": "[parameters('ContainerGroup.Name')]",
+            "location": "westeurope",
+            "properties": {
+                "sku": "Standard",
+                "containers": [
+                    {
+                        "name": "[parameters('ContainerGroup.Name')]",
+                        "properties": {
+                            "image": "ghcr.io/kedacore/sample-dotnet-worker-servicebus-queue:latest",
+                            "ports": [],
+                            "environmentVariables": [
+                                {
+                                    "name": "KEDA_SERVICEBUS_AUTH_MODE",
+                                    "value": "ConnectionString"
+                                },
+                                {
+                                    "name": "KEDA_SERVICEBUS_QUEUE_NAME",
+                                    "value": "orders"
+                                },
+                                {
+                                    "name": "KEDA_SERVICEBUS_QUEUE_CONNECTIONSTRING",
+                                    "value": "[parameters('ServiceBus.ConnectionString')]"
+                                }
+                            ],
+                            "resources": {
+                                "requests": {
+                                    "memoryInGB": 1.5,
+                                    "cpu": 1
+                                }
+                            }
+                        }
+                    }
+                ],
+                "initContainers": [],
+                "restartPolicy": "OnFailure",
+                "osType": "Linux"
+            }
+        }
+    ]
+}
