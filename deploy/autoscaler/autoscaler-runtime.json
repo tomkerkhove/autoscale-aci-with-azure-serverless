@@ -155,7 +155,7 @@
 				"displayName": "[parameters('ApiConnections.AzureContainerInstances.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/aci')]"
+					"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/aci')]"
 				}
 			}
 		},
@@ -169,7 +169,7 @@
 				"displayName": "[parameters('ApiConnections.AzureResourceManager.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/arm')]"
+					"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/arm')]"
 				}
 			}
 		},
@@ -183,7 +183,7 @@
 				"displayName": "[parameters('ApiConnections.AzureBlob.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/azureblob')]"
+					"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/azureblob')]"
 				},
 				"parameterValues": {
 					"accountName": "[parameters('Storage.Name')]",
@@ -203,11 +203,11 @@
 				"displayName": "[parameters('ApiConnections.AzureEventGrid.Name')]",
 				"customParameterValues": {},
 				"api": {
-					"id": "[concat('/subscriptions/', subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/azureeventgridpublish')]"
+					"id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', resourceGroup().location , '/managedApis/azureeventgridpublish')]"
 				},
 				"parameterValues": {
-					"topicEndpoint": "[parameters('EventGrid.Topic.Name')]",
-					"sharedAccessSignature": "[listkeys(resourceId('Microsoft.EventGrid/topics', parameters('EventGrid.Topic.Name')), '2017-06-15-preview').key1]"
+					"endpoint": "[reference(resourceId('Microsoft.EventGrid/topics', parameters('EventGrid.Topic.Name'))).endpoint]",
+					"api_key": "[listkeys(resourceId('Microsoft.EventGrid/topics', parameters('EventGrid.Topic.Name')), '2017-06-15-preview').key1]"
 				}
 			},
 			"dependsOn": [
