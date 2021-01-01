@@ -20,7 +20,7 @@
 		},
 		"Application.Subscription.Id": {
 			"type": "String",
-			"defaultValue": "[subscription().id]"
+			"defaultValue": "[subscription().subscriptionId]"
 		},
 		"ApiConnections.AzureContainerInstances.Name": {
 			"defaultValue": "aci",
