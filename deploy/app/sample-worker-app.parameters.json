@@ -2,8 +2,8 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "ContainerGroup.Name": {
-            "value": "" // TODO: Fill in parameter value
+        "ContainerInstance.Name": {
+            "value": "NAME_PLACEHOLDER"
         },
         "ServiceBus.ConnectionString": {
             "value": "" // TODO: Fill in parameter value

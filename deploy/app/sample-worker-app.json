@@ -2,7 +2,7 @@
     "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
-        "ContainerGroup.Name": {
+        "ContainerInstance.Name": {
             "type": "String"
         },
         "ServiceBus.ConnectionString": {
@@ -14,13 +14,13 @@
         {
             "type": "Microsoft.ContainerInstance/containerGroups",
             "apiVersion": "2019-12-01",
-            "name": "[parameters('ContainerGroup.Name')]",
+            "name": "[parameters('ContainerInstance.Name')]",
             "location": "westeurope",
             "properties": {
                 "sku": "Standard",
                 "containers": [
                     {
-                        "name": "[parameters('ContainerGroup.Name')]",
+                        "name": "[parameters('ContainerInstance.Name')]",
                         "properties": {
                             "image": "ghcr.io/kedacore/sample-dotnet-worker-servicebus-queue:latest",
                             "ports": [],
