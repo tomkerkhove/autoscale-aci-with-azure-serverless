@@ -23,6 +23,6 @@ You can easily deploy the POC:
     - Use one of our sample workloads from [`deploy/app`](deploy/app/README.md)
 2. Deploy our autoscaler infrastructure ARM template (`deploy/autoscaler/autoscaler-infrastructure.json`)
 3. Upload your workload ARM template & parameters file to the `templates` blob container of the created storage account
-4. Deploy our autoscaler runtime ARM template (`deploy/autoscaler/autoscaler-infrastructure.json`)
+4. Deploy our autoscaler runtime ARM template (`deploy/autoscaler/autoscaler-runtime.json`)
 5. Authenticate the Azure Container Instance & ARM API connection that was created
 6. Scale!
