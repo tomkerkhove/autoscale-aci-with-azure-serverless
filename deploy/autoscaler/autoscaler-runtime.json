@@ -681,7 +681,7 @@
 						"value": "[parameters('Application.ResourceGroup.Name')]"
 					},
 					"Workflow.ScaleIn.TriggerUrl": {
-						"value": "[listCallbackUrl(resourceId('Microsoft.Logic/workflows', parameters('Workflows.Autoscaler.ScaleIn'), 'manual'), '2016-06-01').value]"
+						"value": "[listCallbackUrl(resourceId('Microsoft.Logic/workflows/triggers', parameters('Workflows.Autoscaler.ScaleIn'), 'manual'), '2016-06-01').value]"
 					}
 				}
 			},
@@ -926,7 +926,7 @@
 						"value": "[parameters('Application.Subscription.Id')]"
 					},
 					"Workflow.ScaleOut.TriggerUrl": {
-						"value": "[listCallbackUrl(resourceId('Microsoft.Logic/workflows', parameters('Workflows.Autoscaler.ScaleOut'), 'manual'), '2016-06-01').value]"
+						"value": "[listCallbackUrl(resourceId('Microsoft.Logic/workflows/triggers', parameters('Workflows.Autoscaler.ScaleOut'), 'manual'), '2016-06-01').value]"
 					}
 				}
 			},
@@ -1007,7 +1007,7 @@
 										"path": "/datasets/default/copyFile",
 										"queries": {
 											"destination": "@{outputs('Define_Instance_Parameter_URI')}",
-											"overwrite": false,
+											"overwrite": true,
 											"queryParametersSingleEncoded": true,
 											"source": "/templates/@{parameters('Deployment.Parameter.FileName')}"
 										}
