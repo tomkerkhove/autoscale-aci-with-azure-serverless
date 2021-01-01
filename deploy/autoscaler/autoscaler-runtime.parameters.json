@@ -1,0 +1,107 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "Application.Deployment.Parameter.FileName": {
+            "value": "worker.parameters.json"
+        },
+        "Application.Deployment.Template.FileName": {
+            "value": "worker.json"
+        },
+        "Application.Resource.Prefix": {
+            "value": "scalo-instance-"
+        },
+        "Application.ResourceGroup.Name": {
+            "value": "scalo-app"
+        },
+        "Application.Subscription.Id": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ApiConnections.AzureContainerInstances.Name": {
+            "value": "aci"
+        },
+        "ApiConnections.AzureResourceManager.Name": {
+            "value": "arm"
+        },
+        "ApiConnections.AzureBlob.Name": {
+            "value": "azureblob"
+        },
+        "ApiConnections.AzureEventGrid.Name": {
+            "value": "azureeventgrid"
+        },
+        "Workflows.Autoscaler.ScaleIn": {
+            "value": "scalo-autoscaler-scale-in"
+        },
+        "Workflows.Autoscaler.ScaleOut": {
+            "value": "scalo-autoscaler-scale-out"
+        },
+        "Storage.Name": {
+            "value": "scaloautoscaler"
+        },
+        "EventGrid.Topic.Name": {
+            "value": "scalo-events"
+        },
+        "ScaleCriteria.ScaleIn.ActionGroup.Name": {
+            "value": "Contoso Autoscaler - Scale In Trigger"
+        },
+        "ScaleCriteria.Metric.Namespace": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.Metric.Name": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.Metric.Dimension": {
+            "value": [
+                // TODO: Fill in parameter value
+            ]
+        },
+        "ScaleCriteria.ScaleIn.Operator": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleIn.Threshold": {
+            "value": 100
+        },
+        "ScaleCriteria.ScaleIn.Aggregation": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleOut.Operator": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleOut.Threshold": {
+            "value": 100
+        },
+        "ScaleCriteria.ScaleOut.Aggregation": {
+            "value": "" // TODO: Fill in parameter value
+        },
+        "ScaleCriteria.ScaleOut.ActionGroup.Name": {
+            "value": "Contoso Autoscaler - Scale Out Trigger"
+        },
+        "ScaleCriteria.ResourceId": {
+            "value": "/subscriptions/0f9d7fea-99e8-4768-8672-06a28514f77e/resourceGroups/scalo-app/providers/Microsoft.ServiceBus/namespaces/scalo-messaging"
+        },
+        "ScalingDefinition.MaxReplicas": {
+            "value": 10
+        },
+        "ScalingDefinition.MinReplicas": {
+            "value": 0
+        },
+        "ScaleTriggers.ActionGroup.ScaleIn.Name": {
+            "value": "Contoso Autoscaler - Scale In Trigger"
+        },
+        "ScaleTriggers.ActionGroup.ScaleIn.ShortName": {
+            "value": "autoscaleout"
+        },
+        "ScaleTriggers.ActionGroup.ScaleOut.Name": {
+            "value": "Contoso Autoscaler - Scale Out Trigger"
+        },
+        "ScaleTriggers.ActionGroup.ScaleOut.ShortName": {
+            "value": "autoscaleout"
+        },
+        "Workflows.ScaleController.ScaleIn": {
+            "value": "scalo-autoscaler-scale-controller-in"
+        },
+        "Workflows.ScaleController.ScaleOut": {
+            "value": "scalo-autoscaler-scale-controller-out"
+        }
+    }
+}
