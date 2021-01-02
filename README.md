@@ -32,6 +32,7 @@ You can easily deploy the POC:
 All good things come with caveats:
 
 - **Our current scaling strategy is linear** which is a good starting point, but in some scenarios, you’d rather prefer to add multiple instances per scaling action to more aggressively handle spikes. That said, you could very easily implement this by updating the scaling logic of the Scale Controller(s)
+- Currently, **all ARM template parameters are stored in Azure Storage and are not being replaced**. This means that **sensitive parameters, such as secrets, are stored in the Deployment Template Catalog**.
 - **While you can scale to 0 instances, it does not ensure that all your queues are empty**. This means you’ve potentially scaled to 0 instances, while there are still <100 messages. This can easily be implemented by extending the Scale Controller(s).
 - **All events to Azure Event Grid are using the Event Grid scheme but I recommend using CloudEvents when possible**. Today, Azure Logic Apps does not support it but you can easily send an HTTP request to an Azure Function and use code to send the event yourself.
 
