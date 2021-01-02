@@ -2,6 +2,8 @@
 
 A proof-of-concept on how you can autoscale Azure Container Instance container groups in a resource group by using with Azure Serverless as a scaling infrastructure.
 
+Read more about it in [this blog post](https://blog.tomkerkhove.be/2021/01/02/autoscaling-azure-container-instances-with-azure-serverless/).
+
 ## How does it work?
 
 1. **Azure Monitor Alerts are used to monitor scaling criteria** and will trigger scale controller to make scaling decisions. Given they don't automatically mitigate they will keep on sending notifications until the scale criteria is no longer applicable.
